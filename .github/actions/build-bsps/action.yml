@@ -1,0 +1,40 @@
+name: "Build BSPs"
+description: "Build BSPs for the given target architecture."
+
+inputs:
+  target:
+    description: "The target architecture. For example 'arm'"
+    type: string
+    required: true
+  sources-rtems:
+    description: "Where to find the RTEMS sources"
+    type: string
+    required: true
+  tools-bin:
+    description: "bin directory for the tools"
+    type: string
+    required: true
+
+runs:
+  using: "composite"
+  steps:
+    - name: Generate BSP default configs
+      shell: bash
+      run: cd ${{ input.sources-rtems }} && ./waf bsp_defaults --rtems-bsps="${{ inputs.target }}/*" >> config.ini
+    - name: Configure
+      shell: bash
+      run: cd ${{ input.sources-rtems }} && ./waf configure --prefix=/opt/rtems/6
+    - name: Compile
+      shell: bash
+      run: cd ${{ input.sources-rtems }} && ./waf
+    - name: Install
+      shell: bash
+      run: cd ${{ input.sources-rtems }} && ./waf --destdir /tmp/bsps/ install
+    - name: Create archive
+      shell: bash
+      run: tar cf bsps-${{ inputs.target }}.tar /tmp/bsps/
+    - name: Archive build
+      uses: actions/upload-artifact@v3
+      with:
+        name: bsps-${{ inputs.target }}
+        path: bsps-${{ inputs.target }}.tar
