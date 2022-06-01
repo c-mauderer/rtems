@@ -1,0 +1,64 @@
+name: CI
+
+on:
+  # Triggers the workflow on push or pull request for the given branch
+  #push:
+  #  branches: [ ci ]
+  #pull_request:
+  #  branches: [ ci ]
+
+  # Trigger manually from the Actions tab
+  workflow_dispatch:
+
+jobs:
+  build:
+    strategy:
+      matrix:
+        target:
+          #- aarch64
+          #- arm
+          - bfin
+          #- i386
+          #- lm32
+          #- m68k
+          #- microblaze
+          #- mips
+          #- moxie
+          #- nios2
+          #- or1k
+          #- powerpc
+          #- riscv
+          #- sh
+          #- sparc
+          - sparc64
+          #- v850
+          #- x86_64
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+        with:
+          path: rtems
+          ref: ci
+      - name: Install dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install \
+            python3 \
+            python-is-python3
+      - name: Download toolchain artifact
+        uses: dawidd6/action-download-artifact@v2
+        with:
+          repo: c-mauderer/rtems-source-builder
+          branch: ci
+          workflow: toolchain.yml
+          workflow_conclusion: success
+          name: tools-${{ matrix.target }}
+      - name: Unpack toolchain
+        run: |
+          tar xf rtems-tools-*.tar.bz2 -C /
+      - name: Build BSPs
+        uses: ./rtems/.github/actions/build-bsps
+        with:
+          target: ${{ matrix.target }}
+          sources-rtems: rtems
+          tools-bin: /opt/rtems/6/bin
