@@ -20,7 +20,7 @@ runs:
   steps:
     - name: Generate BSP default configs
       shell: bash
-      run: cd ${{ inputs.sources-rtems }} && ./waf bsp_defaults --rtems-bsps="${{ inputs.target }}/*" >> config.ini
+      run: cd ${{ inputs.sources-rtems }} && ./waf bsp_defaults --rtems-bsps="${{ inputs.target }}/.*" >> config.ini
     - name: Configure
       shell: bash
       run: cd ${{ inputs.sources-rtems }} && ./waf configure --prefix=/opt/rtems/6
