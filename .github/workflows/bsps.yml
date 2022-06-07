@@ -55,8 +55,7 @@ jobs:
           name: tools-${{ matrix.target }}
       - name: Unpack toolchain
         run: |
-          mkdir /opt
-          tar xf rtems-tools-*.tar.bz2 -C /
+          tar -m xf rtems-tools-*.tar.bz2 -C /
       - name: Build BSPs
         uses: ./rtems/.github/actions/build-bsps
         with:
