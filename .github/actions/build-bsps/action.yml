@@ -10,8 +10,8 @@ inputs:
     description: "Where to find the RTEMS sources"
     type: string
     required: true
-  tools-bin:
-    description: "bin directory for the tools"
+  prefix:
+    description: "prefix directory with the installed tools"
     type: string
     required: true
 
@@ -23,7 +23,7 @@ runs:
       run: cd ${{ inputs.sources-rtems }} && ./waf bsp_defaults --rtems-bsps="${{ inputs.target }}/.*" >> config.ini
     - name: Configure
       shell: bash
-      run: cd ${{ inputs.sources-rtems }} && ./waf configure --prefix="${{ inputs.tools-bin }}"
+      run: cd ${{ inputs.sources-rtems }} && ./waf configure --prefix="${{ inputs.prefix }}"
     - name: Compile
       shell: bash
       run: cd ${{ inputs.sources-rtems }} && ./waf

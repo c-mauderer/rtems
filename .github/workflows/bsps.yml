@@ -63,4 +63,4 @@ jobs:
         with:
           target: ${{ matrix.target }}
           sources-rtems: rtems
-          tools-bin: "$HOME/toolchain/opt/rtems/6/bin"
+          prefix: "$HOME/toolchain/opt/rtems/6"
