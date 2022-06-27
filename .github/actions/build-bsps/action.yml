@@ -23,7 +23,7 @@ runs:
       run: cd ${{ inputs.sources-rtems }} && ./waf bsp_defaults --rtems-bsps="${{ inputs.target }}/.*" >> config.ini
     - name: Configure
       shell: bash
-      run: cd ${{ inputs.sources-rtems }} && ./waf configure --prefix=/opt/rtems/6
+      run: cd ${{ inputs.sources-rtems }} && ./waf configure --prefix="${{ inputs.tools-bin }}"
     - name: Compile
       shell: bash
       run: cd ${{ inputs.sources-rtems }} && ./waf
