@@ -1,4 +1,4 @@
-name: CI
+name: BSPs
 
 on:
   # Triggers the workflow on push or pull request for the given branch
@@ -55,10 +55,11 @@ jobs:
           name: tools-${{ matrix.target }}
       - name: Unpack toolchain
         run: |
-          tar xf rtems-tools-*.tar.bz2 -C / --no-same-owner
+          mkdir -p "${{ RUNNER_TEMP }}/rtems"
+          tar xf rtems-tools-*.tar.bz2 -C "${{ RUNNER_TEMP }}/rtems"
       - name: Build BSPs
         uses: ./rtems/.github/actions/build-bsps
         with:
           target: ${{ matrix.target }}
           sources-rtems: rtems
-          tools-bin: /opt/rtems/6/bin
+          tools-bin: "${{ RUNNER_TEMP }}/rtems"
