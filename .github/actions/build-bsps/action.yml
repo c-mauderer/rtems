@@ -18,6 +18,9 @@ inputs:
 runs:
   using: "composite"
   steps:
+    - name: create log dir
+      shell: bash
+      run: mkdir "$HOME/logs"
     - name: Run BSP builder
       shell: bash
       run: |
@@ -27,9 +30,9 @@ runs:
                               --rtems "${{ inputs.sources-rtems }}" \
                               --profiles everything \
                               --arch ${{ inputs.target }} \
-                              --log "$HOME/logs/log-${{ inputs.target }}" \
-                              --warnings-report "$HOME/logs/warnings-${{ inputs.target }}" \
-                              --failures-report "$HOME/logs/failures-${{ inputs.target }}"
+                              --log "$HOME/logs/log-${{ inputs.target }}.txt" \
+                              --warnings-report "$HOME/logs/warnings-${{ inputs.target }}.txt" \
+                              --failures-report "$HOME/logs/failures-${{ inputs.target }}.txt"
     - name: Archive log
       uses: actions/upload-artifact@v3
       with:
