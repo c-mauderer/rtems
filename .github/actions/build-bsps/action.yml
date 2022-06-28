@@ -20,21 +20,21 @@ runs:
   steps:
     - name: create log dir
       shell: bash
-      run: mkdir "$HOME/logs"
+      run: mkdir ~/logs
     - name: Run BSP builder
       shell: bash
       run: |
         "${{ inputs.prefix }}"/bin/rtems-bsp-builder \
-                              --build-path "$HOME/rtems-build" \
+                              --build-path ~/rtems-build \
                               --rtems-tools "${{ inputs.prefix }}" \
                               --rtems "${{ inputs.sources-rtems }}" \
                               --profiles everything \
                               --arch ${{ inputs.target }} \
-                              --log "$HOME/logs/log-${{ inputs.target }}.txt" \
-                              --warnings-report "$HOME/logs/warnings-${{ inputs.target }}.txt" \
-                              --failures-report "$HOME/logs/failures-${{ inputs.target }}.txt"
+                              --log ~/logs/log-${{ inputs.target }}.txt \
+                              --warnings-report ~/logs/warnings-${{ inputs.target }}.txt \
+                              --failures-report ~/logs/failures-${{ inputs.target }}.txt
     - name: Archive log
       uses: actions/upload-artifact@v3
       with:
         name: log-${{ inputs.target }}
-        path: "$HOME/logs"
+        path: ~/logs
