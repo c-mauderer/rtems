@@ -26,7 +26,8 @@ runs:
       run: |
         "${{ inputs.prefix }}"/bin/rtems-bsp-builder \
                               --build-path ~/rtems-build \
-                              --rtems-tools "${{ inputs.prefix }}" \
+                              --prefix "${{ inputs.prefix }}" \
+                              --rtems-tools "${{ inputs.prefix }}/bin" \
                               --rtems "${{ inputs.sources-rtems }}" \
                               --profiles everything \
                               --arch ${{ inputs.target }} \
@@ -38,3 +39,6 @@ runs:
       with:
         name: log-${{ inputs.target }}
         path: ~/logs
+    - name: Check for errors
+      shell: bash
+      run: grep "Failures: 0" ~/logs/log-${{ inputs.target }}.txt
