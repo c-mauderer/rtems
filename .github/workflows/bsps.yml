@@ -56,12 +56,12 @@ jobs:
           name: tools-${{ matrix.target }}
       - name: Unpack toolchain
         run: |
-          mkdir -p "$HOME/toolchain"
-          tar xf rtems-tools-*.tar.bz2 -v -C "$HOME/toolchain"
-          ls -la "$HOME/toolchain"
+          mkdir -p "$GITHUB_WORKSPACE/toolchain"
+          tar xf rtems-tools-*.tar.bz2 -v -C "$GITHUB_WORKSPACE/toolchain"
+          ls -la "$GITHUB_WORKSPACE/toolchain"
       - name: Build BSPs
         uses: ./rtems/.github/actions/build-bsps
         with:
           target: ${{ matrix.target }}
-          sources-rtems: rtems
-          prefix: "$HOME/toolchain/opt/rtems/6"
+          sources-rtems: "$GITHUB_WORKSPACE/rtems"
+          prefix: "$GITHUB_WORKSPACE/toolchain/opt/rtems/6"

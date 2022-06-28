@@ -7,11 +7,11 @@ inputs:
     type: string
     required: true
   sources-rtems:
-    description: "Where to find the RTEMS sources"
+    description: "Where to find the RTEMS sources. Use absolute path!"
     type: string
     required: true
   prefix:
-    description: "prefix directory with the installed tools"
+    description: "Prefix directory with the installed tools. Use absolute path!"
     type: string
     required: true
 
@@ -20,26 +20,26 @@ runs:
   steps:
     - name: create log dir
       shell: bash
-      run: mkdir ~/logs
+      run: mkdir "${GITHUB_WORKSPACE}"/bsp-logs
     - name: Run BSP builder
       shell: bash
       run: |
         "${{ inputs.prefix }}"/bin/rtems-bsp-builder \
-                              --build-path ~/rtems-build \
+                              --build-path "${GITHUB_WORKSPACE}"/rtems-build \
                               --prefix "${{ inputs.prefix }}" \
                               --rtems-tools "${{ inputs.prefix }}/bin" \
                               --rtems "${{ inputs.sources-rtems }}" \
                               --profiles everything \
                               --arch ${{ inputs.target }} \
-                              --log ~/logs/log-${{ inputs.target }}.txt \
-                              --warnings-report ~/logs/warnings-${{ inputs.target }}.txt \
-                              --failures-report ~/logs/failures-${{ inputs.target }}.txt
+                              --log "${GITHUB_WORKSPACE}"/bsp-logs/log-${{ inputs.target }}.txt \
+                              --warnings-report "${GITHUB_WORKSPACE}"/bsp-logs/warnings-${{ inputs.target }}.txt \
+                              --failures-report "${GITHUB_WORKSPACE}"/bsp-logs/failures-${{ inputs.target }}.txt
     - name: Archive log
       uses: actions/upload-artifact@v3
       with:
         name: log-${{ inputs.target }}
-        path: ~/logs
+        path: bsp-logs
     - name: Check for errors
       shell: bash
       run: |
-        grep "Failures: 0" ~/logs/log-${{ inputs.target }}.txt
+        grep "Failures: 0" "$GITHUB_WORKSPACE"/bsp-logs/log-${{ inputs.target }}.txt
