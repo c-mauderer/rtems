@@ -22,14 +22,14 @@ runs:
       shell: bash
       run: |
         "${{ inputs.prefix }}"/bin/rtems-bsp-builder \
-                              --build-path="$HOME/rtems-build" \
-                              --rtems-tools="${{ inputs.prefix }}" \
-                              --rtems="${{ inputs.sources-rtems }}" \
-                              --profiles=everything \
-                              --archs=${{ inputs.target }} \
-                              --log="$HOME/logs/log-${{ inputs.target }}" \
-                              --warnings-report="$HOME/logs/warnings-${{ inputs.target }}" \
-                              --failures-report="$HOME/logs/failures-${{ inputs.target }}"
+                              --build-path "$HOME/rtems-build" \
+                              --rtems-tools "${{ inputs.prefix }}" \
+                              --rtems "${{ inputs.sources-rtems }}" \
+                              --profiles everything \
+                              --arch ${{ inputs.target }} \
+                              --log "$HOME/logs/log-${{ inputs.target }}" \
+                              --warnings-report "$HOME/logs/warnings-${{ inputs.target }}" \
+                              --failures-report "$HOME/logs/failures-${{ inputs.target }}"
     - name: Archive log
       uses: actions/upload-artifact@v3
       with:
