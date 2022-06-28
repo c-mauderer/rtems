@@ -41,4 +41,5 @@ runs:
         path: ~/logs
     - name: Check for errors
       shell: bash
-      run: grep "Failures: 0" ~/logs/log-${{ inputs.target }}.txt
+      run: |
+        grep "Failures: 0" ~/logs/log-${{ inputs.target }}.txt
