@@ -18,23 +18,19 @@ inputs:
 runs:
   using: "composite"
   steps:
-    - name: Generate BSP default configs
-      shell: bash
-      run: cd ${{ inputs.sources-rtems }} && ./waf bsp_defaults --rtems-bsps="${{ inputs.target }}/.*" >> config.ini
-    - name: Configure
-      shell: bash
-      run: cd ${{ inputs.sources-rtems }} && ./waf configure --prefix="${{ inputs.prefix }}"
-    - name: Compile
-      shell: bash
-      run: cd ${{ inputs.sources-rtems }} && ./waf
-    - name: Install
-      shell: bash
-      run: cd ${{ inputs.sources-rtems }} && ./waf --destdir /tmp/bsps/ install
-    - name: Create archive
-      shell: bash
-      run: tar cf bsps-${{ inputs.target }}.tar /tmp/bsps/
-    - name: Archive build
+    - name: Run BSP builder
+      run:
+        "${{ inputs.prefix }}"/bin/rtems-bsp-builder \
+                              --build-path="$HOME/rtems-build" \
+                              --rtems-tools="${{ inputs.prefix }}" \
+                              --rtems="${{ inputs.sources-rtems }}" \
+                              --profiles=everything \
+                              --archs=${{ inputs.target }} \
+                              --log="$HOME/logs/log-${{ inputs.target }}" \
+                              --warnings-report="$HOME/logs/warnings-${{ inputs.target }}" \
+                              --failures-report="$HOME/logs/failures-${{ inputs.target }}"
+    - name: Archive log
       uses: actions/upload-artifact@v3
       with:
-        name: bsps-${{ inputs.target }}
-        path: bsps-${{ inputs.target }}.tar
+        name: log-${{ inputs.target }}
+        path: "$HOME/logs"
