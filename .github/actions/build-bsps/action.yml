@@ -19,7 +19,7 @@ runs:
   using: "composite"
   steps:
     - name: Run BSP builder
-      run:
+      run: |
         "${{ inputs.prefix }}"/bin/rtems-bsp-builder \
                               --build-path="$HOME/rtems-build" \
                               --rtems-tools="${{ inputs.prefix }}" \
