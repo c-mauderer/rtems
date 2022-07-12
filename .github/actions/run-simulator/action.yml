@@ -1,0 +1,65 @@
+name: "Run Simulator"
+description: "Build BSPs for the given target/BSP and run tests on a simulator"
+
+inputs:
+  target:
+    description: "The Arch/BSP to run. For example 'sparc/erc32'"
+    type: string
+    required: true
+  sources-rtems:
+    description: "Where to find the RTEMS sources. Use absolute path!"
+    type: string
+    required: true
+  prefix:
+    description: "Prefix directory with the installed tools. Use absolute path!"
+    type: string
+    required: true
+
+runs:
+  using: "composite"
+  steps:
+    - name: Check whether simulator is supported
+      shell: bash
+      run: |
+        if "${{ inputs.target }}" != "sparc/erc32" then
+          echo "${{ inputs.target }} is not supported for simulator runs"
+        fi
+        false
+    - name: create environment variables for paths and names
+      shell: bash
+      run: |
+        shortname=`echo "${{ inputs.target }}" | sed -e "s|/|_|g"`
+        echo "shortname=${shortname}" >> $GITHUB_ENV
+        echo "logdir=${GITHUB_WORKSPACE}/logs-${shortname}" >> $GITHUB_ENV
+        echo "builddir=${GITHUB_WORKSPACE}/build-${shortname}" >> $GITHUB_ENV
+    - name: create directories
+      shell: bash
+      run: |
+        mkdir -p "${logdir}"
+        mkdir -p "${builddir}"
+    - name: Generate BSP config
+      shell: bash
+      run: echo -e "[${{ inputs.target }}]\nBUILD_TESTS = True" >> "${builddir}/config.ini"
+    - name: Configure
+      shell: bash
+      run: cd ${{ inputs.sources-rtems }} && ./waf configure \
+          --rtems-config="${builddir}/config.ini" \
+          --out="${builddir}" \
+          --prefix="${{ inputs.prefix }}"
+    - name: Compile
+      shell: bash
+      run: cd ${{ inputs.sources-rtems }} && ./waf \
+          --rtems-config="${builddir}/config.ini" \
+          --out="${builddir}" \
+          --prefix="${{ inputs.prefix }}"
+    - name: Run tests
+      shell: bash
+      run: ${{ inputs.prefix }}/bin/rtems-test \
+          --log="${logdir}/test.log \
+          --rtems-bsp=erc32-sis \
+          --rtems-tools="${{ inputs.prefix }}"
+    - name: Archive log
+      uses: actions/upload-artifact@v3
+      with:
+        name: test-logs-${{ env.shortname }}
+        path: logs-${{ env.shortname }}

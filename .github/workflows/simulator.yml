@@ -1,0 +1,57 @@
+name: Simulator
+
+on:
+  # Triggers the workflow on push or pull request for the given branch
+  push:
+    branches: [ ci ]
+  pull_request:
+    branches: [ ci ]
+
+  # Trigger manually from the Actions tab
+  workflow_dispatch:
+
+jobs:
+  build:
+    strategy:
+      fail-fast: false
+      matrix:
+        simulators:
+          - sparc/erc32
+    runs-on: ubuntu-latest
+    steps:
+      - name: split arch and BSP
+        shell: bash
+        run: |
+          arch=`echo "${{ inputs.simulators }}" | sed -e "s|/.*||g"`
+          bsp=`echo "${{ inputs.simulators }}" | sed -e "s|.*/||g"`
+          echo "arch=${arch}" >> $GITHUB_ENV
+          echo "bsp=${bsp}" >> $GITHUB_ENV
+      - uses: actions/checkout@v3
+        with:
+          path: rtems
+          ref: ci
+      - name: Install dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install \
+            python3 \
+            python-is-python3
+      - name: Download toolchain artifact
+        uses: dawidd6/action-download-artifact@v2
+        with:
+          repo: c-mauderer/rtems-source-builder
+          branch: ci
+          workflow: toolchain.yml
+          workflow_conclusion: success
+          name: tools-${{ env.arch }}
+      - name: Unpack toolchain
+        run: |
+          mkdir -p "$GITHUB_WORKSPACE/toolchain"
+          tar xf rtems-tools-*.tar.bz2 -v -C "$GITHUB_WORKSPACE/toolchain"
+          ls -la "$GITHUB_WORKSPACE/toolchain"
+      - name: Start simulator run
+        uses: ./rtems/.github/actions/run-simulator
+        with:
+          target: ${{ matrix.simulators }}
+          sources-rtems: "$GITHUB_WORKSPACE/rtems"
+          prefix: "$GITHUB_WORKSPACE/toolchain/opt/rtems/6"
