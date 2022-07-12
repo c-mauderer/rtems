@@ -29,7 +29,7 @@ runs:
                               --prefix "${{ inputs.prefix }}" \
                               --rtems-tools "${{ inputs.prefix }}/bin" \
                               --rtems "${{ inputs.sources-rtems }}" \
-                              --profiles tier-1,tier-2 \
+                              --profiles tier-1 \
                               --arch ${{ inputs.target }} \
                               --log "${GITHUB_WORKSPACE}"/bsp-logs/log-${{ inputs.target }}.txt \
                               --warnings-report "${GITHUB_WORKSPACE}"/bsp-logs/warnings-${{ inputs.target }}.txt \
