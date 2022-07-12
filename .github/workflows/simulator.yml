@@ -22,8 +22,8 @@ jobs:
       - name: split arch and BSP
         shell: bash
         run: |
-          arch=`echo "${{ inputs.simulators }}" | sed -e "s|/.*||g"`
-          bsp=`echo "${{ inputs.simulators }}" | sed -e "s|.*/||g"`
+          arch=`echo "${{ matrix.simulators }}" | sed -e "s|/.*||g"`
+          bsp=`echo "${{ matrix.simulators }}" | sed -e "s|.*/||g"`
           echo "arch=${arch}" >> $GITHUB_ENV
           echo "bsp=${bsp}" >> $GITHUB_ENV
       - uses: actions/checkout@v3
