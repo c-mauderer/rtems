@@ -18,12 +18,16 @@ inputs:
 runs:
   using: "composite"
   steps:
-    - name: Check whether simulator is supported
+    - name: Parameters for erc32
+      if: ( "${{ inputs.target }}" == "sparc/erc32" )
       shell: bash
       run: |
-        if "${{ inputs.target }}" != "sparc/erc32" then
-          echo "${{ inputs.target }} is not supported for simulator runs"
-        fi
+        echo "rtems_test_args=--rtems-bsp=erc32-sis" >> $GITHUB_ENV
+    - name: Check whether parameters for this simulator have been found
+      if: ( "${{ env.rtems_test_args }}" == "" )
+      shell: bash
+      run:
+        echo "${{ inputs.target }} is not supported for simulator runs"
         false
     - name: create environment variables for paths and names
       shell: bash
@@ -56,8 +60,8 @@ runs:
       shell: bash
       run: ${{ inputs.prefix }}/bin/rtems-test \
           --log="${logdir}/test.log \
-          --rtems-bsp=erc32-sis \
-          --rtems-tools="${{ inputs.prefix }}"
+          --rtems-tools="${{ inputs.prefix }}" \
+          ${{ env.rtems_test_args }}
     - name: Archive log
       uses: actions/upload-artifact@v3
       with:
