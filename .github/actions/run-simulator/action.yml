@@ -18,43 +18,43 @@ inputs:
 outputs:
   passed_count:
     description: "Number of passed tests"
-    value: ${{ steps.parse-result.outputs.passed_count }
+    value: ${{ steps.parse-result.outputs.passed_count }}
   failed_count:
     description: "Number of failed tests"
-    value: ${{ steps.parse-result.outputs.failed_count }
+    value: ${{ steps.parse-result.outputs.failed_count }}
   user-input_count:
     description: "Number of tests with user input"
-    value: ${{ steps.parse-result.outputs.user-input_count }
+    value: ${{ steps.parse-result.outputs.user-input_count }}
   expected-fail_count:
     description: "Number of expected fails"
-    value: ${{ steps.parse-result.outputs.expected-fail_count }
+    value: ${{ steps.parse-result.outputs.expected-fail_count }}
   indeterminate_count:
     description: "Number of indeterminate tests"
-    value: ${{ steps.parse-result.outputs.indeterminate_count }
+    value: ${{ steps.parse-result.outputs.indeterminate_count }}
   benchmark_count:
     description: "Number of benchmark tests"
-    value: ${{ steps.parse-result.outputs.benchmark_count }
+    value: ${{ steps.parse-result.outputs.benchmark_count }}
   timeout_count:
     description: "Number of tests that timed out"
-    value: ${{ steps.parse-result.outputs.timeout_count }
+    value: ${{ steps.parse-result.outputs.timeout_count }}
   test-too-long_count:
     description: "Number of too long tests"
-    value: ${{ steps.parse-result.outputs.test-too-long_count }
+    value: ${{ steps.parse-result.outputs.test-too-long_count }}
   wrong-version_count:
     description: "Number of tests with wrong version"
-    value: ${{ steps.parse-result.outputs.wrong-version_count }
+    value: ${{ steps.parse-result.outputs.wrong-version_count }}
   wrong-build_count:
     description: "Number of tests with wrong build"
-    value: ${{ steps.parse-result.outputs.wrong-build_count }
+    value: ${{ steps.parse-result.outputs.wrong-build_count }}
   wrong-tools_count:
     description: "Number of tests with wrong tools"
-    value: ${{ steps.parse-result.outputs.wrong-tools_count }
+    value: ${{ steps.parse-result.outputs.wrong-tools_count }}
   wrong-header_count:
     description: "Number of tests with wrong header"
-    value: ${{ steps.parse-result.outputs.wrong-header_count }
+    value: ${{ steps.parse-result.outputs.wrong-header_count }}
   total_count:
     description: "Number of tests"
-    value: ${{ steps.parse-result.outputs.total_count }
+    value: ${{ steps.parse-result.outputs.total_count }}
 
 runs:
   using: "composite"
