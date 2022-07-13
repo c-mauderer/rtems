@@ -18,12 +18,17 @@ inputs:
 runs:
   using: "composite"
   steps:
-    - if: ( "${{ inputs.target }}" == "sparc/erc32" )
-      shell: bash
+    - shell: bash
       run: |
-        # Check whether it's sparc/erc32
-        echo "rtems_test_args=--rtems-bsp=erc32-sis" >> $GITHUB_ENV
-    - if: ( "${{ env.rtems_test_args }}" == "" )
+        # Find correct parameters for this simulator
+        args=""
+        found=0
+        [ "${{ inputs.target }}" == "sparc/erc32" ] && \
+           args="--rtems-bsp=erc32-sis" && \
+           found=1
+        echo "rtems_test_args=${args}" >> $GITHUB_ENV
+        echo "simulator_supported=${found}" >> $GITHUB_ENV
+    - if: ${{ env.simulator_supported == 1 }}
       shell: bash
       run: |
         # Check whether parameters for this simulator have been found

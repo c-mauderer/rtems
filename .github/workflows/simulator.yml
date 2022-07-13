@@ -17,6 +17,7 @@ jobs:
       matrix:
         simulators:
           - sparc/erc32
+          - arm/xilinx_zynq_a9_qemu
     runs-on: ubuntu-latest
     steps:
       - name: split arch and BSP
