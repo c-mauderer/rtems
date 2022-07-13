@@ -46,6 +46,14 @@ jobs:
           workflow: toolchain.yml
           workflow_conclusion: success
           name: tools-${{ env.arch }}
+      - name: Download qemu artifact
+        uses: dawidd6/action-download-artifact@v2
+        with:
+          repo: c-mauderer/rtems-source-builder
+          branch: ci
+          workflow: toolchain.yml
+          workflow_conclusion: success
+          name: devel-qemu
       - name: Unpack toolchain
         run: |
           mkdir -p "$GITHUB_WORKSPACE/toolchain"
