@@ -52,8 +52,16 @@ jobs:
           for t in *.tar.bz2; do tar xf $t -v -C "$GITHUB_WORKSPACE/toolchain"; done
           ls -la "$GITHUB_WORKSPACE/toolchain"
       - name: Start simulator run
+        id: simulator
         uses: ./rtems/.github/actions/run-simulator
         with:
           target: ${{ matrix.simulators }}
           sources-rtems: "$GITHUB_WORKSPACE/rtems"
           prefix: "$GITHUB_WORKSPACE/toolchain/opt/rtems/6"
+      - name: List failed BSPs
+        if: ${{ failure() }}
+        run: |
+          echo "${{ steps.simulator.outputs.failed_count }} tests failed:"
+          echo "    ${{ steps.simulator.outputs.failed }}"
+          echo "${{ steps.simulator.outputs.timeout_count }} tests timed out:"
+          echo "    ${{ steps.simulator.outputs.timeout }}"
