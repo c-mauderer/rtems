@@ -22,6 +22,9 @@ outputs:
   failed_count:
     description: "Number of failed tests"
     value: ${{ steps.parse-result.outputs.failed_count }}
+  failed:
+    description: "Failed tests"
+    value: ${{ steps.parse-result.outputs.failed }}
   user-input_count:
     description: "Number of tests with user input"
     value: ${{ steps.parse-result.outputs.user-input_count }}
@@ -37,6 +40,9 @@ outputs:
   timeout_count:
     description: "Number of tests that timed out"
     value: ${{ steps.parse-result.outputs.timeout_count }}
+  timeout:
+    description: "Timed out tests"
+    value: ${{ steps.parse-result.outputs.timeout }}
   test-too-long_count:
     description: "Number of too long tests"
     value: ${{ steps.parse-result.outputs.test-too-long_count }}
