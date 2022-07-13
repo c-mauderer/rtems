@@ -59,7 +59,7 @@ runs:
           --rtems-config="${{ env.builddir }}/config.ini" \
           --top="${{ inputs.sources-rtems }}" \
           --prefix="${{ inputs.prefix }}"
-    - if: fail()
+    - if: ${{ failure() }}
       shell: bash
       run: |
         # print log
