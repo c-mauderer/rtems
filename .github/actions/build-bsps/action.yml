@@ -2,8 +2,8 @@ name: "Build BSPs"
 description: "Build BSPs for the given target architecture."
 
 inputs:
-  target:
-    description: "The target architecture. For example 'arm'"
+  bsp:
+    description: "The bsp to build 'sparc/erc32'"
     type: string
     required: true
   sources-rtems:
@@ -18,6 +18,11 @@ inputs:
 runs:
   using: "composite"
   steps:
+    - name: create name for logs
+      shell: bash
+      run: |
+        shortname=`echo "${{ inputs.bsp }}" | sed -e "s|/|_|g"`
+        echo "shortname=${shortname}" >> $GITHUB_ENV
     - name: create log dir
       shell: bash
       run: mkdir "${GITHUB_WORKSPACE}"/bsp-logs
@@ -29,17 +34,16 @@ runs:
                               --prefix "${{ inputs.prefix }}" \
                               --rtems-tools "${{ inputs.prefix }}/bin" \
                               --rtems "${{ inputs.sources-rtems }}" \
-                              --profiles tier-1 \
-                              --arch ${{ inputs.target }} \
-                              --log "${GITHUB_WORKSPACE}"/bsp-logs/log-${{ inputs.target }}.txt \
-                              --warnings-report "${GITHUB_WORKSPACE}"/bsp-logs/warnings-${{ inputs.target }}.txt \
-                              --failures-report "${GITHUB_WORKSPACE}"/bsp-logs/failures-${{ inputs.target }}.txt
+                              --bsp ${{ inputs.bsp }} \
+                              --log "${GITHUB_WORKSPACE}"/bsp-logs/log-${{ env.shortname }}.txt \
+                              --warnings-report "${GITHUB_WORKSPACE}"/bsp-logs/warnings-${{ env.shortname }}.txt \
+                              --failures-report "${GITHUB_WORKSPACE}"/bsp-logs/failures-${{ env.shortname }}.txt
     - name: Archive log
       uses: actions/upload-artifact@v3
       with:
-        name: log-${{ inputs.target }}
+        name: log-${{ env.shortname }}
         path: bsp-logs
     - name: Check for errors
       shell: bash
       run: |
-        grep "Failures: 0" "$GITHUB_WORKSPACE"/bsp-logs/log-${{ inputs.target }}.txt
+        grep "Failures: 0" "$GITHUB_WORKSPACE"/bsp-logs/log-${{ env.shortname }}.txt

@@ -11,29 +11,29 @@ on:
   workflow_dispatch:
 
 jobs:
+  setup-bsp-matrix:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+        with:
+          path: rtems
+          ref: ci
+      - name: Build matrix
+        id: build-matrix
+        shell: bash
+        run: |
+          cd ${GITHUB_WORKSPACE}/rtems
+          out=$(./waf bsp_list | jq -R '.|split("/")|{ arch: .[0], bsp: .[1] }' | jq -sc '.')
+          echo "$out"
+          echo "::set-output name=matrix::$out"
+    outputs:
+      matrix: ${{ steps.build-matrix.outputs.matrix }}
+
   build:
+    needs: setup-bsp-matrix
     strategy:
       fail-fast: false
-      matrix:
-        target:
-          - aarch64
-          - arm
-          - bfin
-          - i386
-          - lm32
-          - m68k
-          - microblaze
-          - mips
-          - moxie
-          - nios2
-          - or1k
-          - powerpc
-          - riscv
-          - sh
-          - sparc
-          - sparc64
-          - v850
-          - x86_64
+      matrix: ${{ fromJson(needs.setup-bsp-matrix.outputs.matrix) }}
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v3
@@ -53,7 +53,7 @@ jobs:
           branch: ci
           workflow: toolchain.yml
           workflow_conclusion: success
-          name: tools-${{ matrix.target }}
+          name: tools-${{ matrix.arch }}
       - name: Unpack toolchain
         run: |
           mkdir -p "$GITHUB_WORKSPACE/toolchain"
@@ -62,6 +62,6 @@ jobs:
       - name: Build BSPs
         uses: ./rtems/.github/actions/build-bsps
         with:
-          target: ${{ matrix.target }}
+          bsp: "${{ matrix.arch }}/${{ matrix.bsp }}"
           sources-rtems: "$GITHUB_WORKSPACE/rtems"
           prefix: "$GITHUB_WORKSPACE/toolchain/opt/rtems/6"
