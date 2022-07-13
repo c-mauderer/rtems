@@ -13,21 +13,21 @@ on:
 jobs:
   setup-bsp-matrix:
     runs-on: ubuntu-latest
+    outputs:
+      matrix: ${{ steps.set-matrix.outputs.matrix }}
     steps:
       - uses: actions/checkout@v3
         with:
           path: rtems
           ref: ci
       - name: Build matrix
-        id: build-matrix
+        id: set-matrix
         shell: bash
         run: |
           cd ${GITHUB_WORKSPACE}/rtems
-          out=$(./waf bsp_list | jq -R '.|split("/")|{ arch: .[0], bsp: .[1] }' | jq -sc '.')
+          out=$(./waf bsp_list | jq -R '.|split("/")|{ arch: .[0], bsp: .[1] }' | jq -sc '{include: .}')
           echo "$out"
           echo "::set-output name=matrix::$out"
-    outputs:
-      matrix: ${{ steps.build-matrix.outputs.matrix }}
 
   build:
     needs: setup-bsp-matrix
