@@ -56,8 +56,14 @@ runs:
         # configure
         cd ${{ env.builddir }} && ${{ inputs.sources-rtems }}/waf configure \
           --out="${{ env.builddir }}" \
+          --rtems-config="${{ env.builddir }}/config.ini" \
           --top="${{ inputs.sources-rtems }}" \
           --prefix="${{ inputs.prefix }}"
+    - if: fail()
+      shell: bash
+      run: |
+        # print log
+        cat "${{ env.builddir }}/config.log"
     - shell: bash
       run: |
         # compile
