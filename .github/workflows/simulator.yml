@@ -48,7 +48,7 @@ jobs:
       - name: Unpack toolchain
         run: |
           mkdir -p "$GITHUB_WORKSPACE/toolchain"
-          tar xf rtems-tools-*.tar.bz2 -v -C "$GITHUB_WORKSPACE/toolchain"
+          for t in *.tar.bz2; do tar xf $t -v -C "$GITHUB_WORKSPACE/toolchain"; done
           ls -la "$GITHUB_WORKSPACE/toolchain"
       - name: Start simulator run
         uses: ./rtems/.github/actions/run-simulator

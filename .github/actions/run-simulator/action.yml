@@ -77,6 +77,10 @@ runs:
         # run tests
         ${{ inputs.prefix }}/bin/rtems-test \
           --log="${{ env.logdir }}/test.log" \
+          --log-mode=all \
+          --report-path="${{ env.logdir }}/report" \
+          --report-format=json \
+          --warn-all \
           --rtems-tools="${{ inputs.prefix }}" \
           ${{ env.rtems_test_args }} \
           ${{ env.builddir }}
@@ -89,4 +93,4 @@ runs:
       uses: actions/upload-artifact@v3
       with:
         name: test-build-${{ env.shortname }}
-        path: build-${{ env.shortname }}
+        path: build-${{ env.shortname }}/**/*.exe
