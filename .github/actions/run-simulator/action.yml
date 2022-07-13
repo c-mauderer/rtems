@@ -133,10 +133,13 @@ runs:
     - id: parse-result
       shell: bash
       run: |
-        cat ${{ env.logdir }}/report.json | \
-            jq -r '.["summary"]|to_entries[]|("::set-output name="+.key+"::"+(.value|tostring))'
+        # Generate github outputs from report
+        jq -r '.["summary"]|to_entries[]|("::set-output name="+.key+"::"+(.value|tostring))' ${{ env.logdir }}/report.json
+        echo "done"
     - if: ${{ steps.parse-result.outputs.failed_count != 0 || steps.parse-result.outputs.timeout_count != 0 }}
       shell: bash
       run: |
         # fail if tests failed
+        echo "${{ steps.parse-result.outputs.failed_count }} tests failed."
+        echo "${{ steps.parse-result.outputs.timeout_count }} tests timed out."
         false
