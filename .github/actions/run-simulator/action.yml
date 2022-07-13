@@ -85,3 +85,8 @@ runs:
       with:
         name: test-logs-${{ env.shortname }}
         path: logs-${{ env.shortname }}
+    - name: Archive build (only for debugging)
+      uses: actions/upload-artifact@v3
+      with:
+        name: test-build-${{ env.shortname }}
+        path: build-${{ env.shortname }}
