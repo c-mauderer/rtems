@@ -18,48 +18,53 @@ inputs:
 runs:
   using: "composite"
   steps:
-    - name: Parameters for erc32
-      if: ( "${{ inputs.target }}" == "sparc/erc32" )
+    - if: ( "${{ inputs.target }}" == "sparc/erc32" )
       shell: bash
       run: |
+        # Check whether it's sparc/erc32
         echo "rtems_test_args=--rtems-bsp=erc32-sis" >> $GITHUB_ENV
-    - name: Check whether parameters for this simulator have been found
-      if: ( "${{ env.rtems_test_args }}" == "" )
+    - if: ( "${{ env.rtems_test_args }}" == "" )
       shell: bash
-      run:
+      run: |
+        # Check whether parameters for this simulator have been found
         echo "${{ inputs.target }} is not supported for simulator runs"
         false
-    - name: create environment variables for paths and names
-      shell: bash
+    - shell: bash
       run: |
+        # create environment variables for paths and names
         shortname=`echo "${{ inputs.target }}" | sed -e "s|/|_|g"`
         echo "shortname=${shortname}" >> $GITHUB_ENV
         echo "logdir=${GITHUB_WORKSPACE}/logs-${shortname}" >> $GITHUB_ENV
         echo "builddir=${GITHUB_WORKSPACE}/build-${shortname}" >> $GITHUB_ENV
-    - name: create directories
-      shell: bash
+    - shell: bash
       run: |
-        mkdir -p "${logdir}"
-        mkdir -p "${builddir}"
-    - name: Generate BSP config
-      shell: bash
-      run: echo -e "[${{ inputs.target }}]\nBUILD_TESTS = True" >> "${builddir}/config.ini"
-    - name: Configure
-      shell: bash
-      run: cd ${{ inputs.sources-rtems }} && ./waf configure \
-          --rtems-config="${builddir}/config.ini" \
-          --out="${builddir}" \
+        # create directories
+        mkdir -p "${{ env.logdir }}"
+        mkdir -p "${{ env.builddir }}"
+    - shell: bash
+      run: |
+        # generate BSP config
+        echo -e "[${{ inputs.target }}]\nBUILD_TESTS = True" >> "${{ env.builddir }}/config.ini"
+        cat "${{ env.builddir }}/config.ini"
+    - shell: bash
+      run: |
+        # configure
+        cd ${{ env.builddir }} && ${{ inputs.sources-rtems }}/waf configure \
+          --out="${{ env.builddir }}" \
+          --top="${{ inputs.sources-rtems }}" \
           --prefix="${{ inputs.prefix }}"
-    - name: Compile
-      shell: bash
-      run: cd ${{ inputs.sources-rtems }} && ./waf \
-          --rtems-config="${builddir}/config.ini" \
-          --out="${builddir}" \
+    - shell: bash
+      run: |
+        # compile
+        cd ${{ env.builddir }} && ${{ inputs.sources-rtems }}/waf \
+          --out="${{ env.builddir }}" \
+          --top="${{ inputs.sources-rtems }}" \
           --prefix="${{ inputs.prefix }}"
-    - name: Run tests
-      shell: bash
-      run: ${{ inputs.prefix }}/bin/rtems-test \
-          --log="${logdir}/test.log \
+    - shell: bash
+      run: |
+        # run tests
+        ${{ inputs.prefix }}/bin/rtems-test \
+          --log="${{ env.logdir }}/test.log \
           --rtems-tools="${{ inputs.prefix }}" \
           ${{ env.rtems_test_args }}
     - name: Archive log
