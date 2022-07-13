@@ -75,7 +75,7 @@ runs:
       run: |
         # run tests
         ${{ inputs.prefix }}/bin/rtems-test \
-          --log="${{ env.logdir }}/test.log \
+          --log="${{ env.logdir }}/test.log" \
           --rtems-tools="${{ inputs.prefix }}" \
           ${{ env.rtems_test_args }}
     - name: Archive log
