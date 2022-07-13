@@ -16,45 +16,45 @@ inputs:
     required: true
 
 outputs:
-  passed:
+  passed_count:
     description: "Number of passed tests"
-    value: ${{ steps.parse-result.outputs.passed }
-  failed:
+    value: ${{ steps.parse-result.outputs.passed_count }
+  failed_count:
     description: "Number of failed tests"
-    value: ${{ steps.parse-result.outputs.failed }
-  user-input:
+    value: ${{ steps.parse-result.outputs.failed_count }
+  user-input_count:
     description: "Number of tests with user input"
-    value: ${{ steps.parse-result.outputs.user-input }
-  expected-fail:
+    value: ${{ steps.parse-result.outputs.user-input_count }
+  expected-fail_count:
     description: "Number of expected fails"
-    value: ${{ steps.parse-result.outputs.expected-fail }
-  indeterminate:
+    value: ${{ steps.parse-result.outputs.expected-fail_count }
+  indeterminate_count:
     description: "Number of indeterminate tests"
-    value: ${{ steps.parse-result.outputs.indeterminate }
-  benchmark:
+    value: ${{ steps.parse-result.outputs.indeterminate_count }
+  benchmark_count:
     description: "Number of benchmark tests"
-    value: ${{ steps.parse-result.outputs.benchmark }
-  timeout:
+    value: ${{ steps.parse-result.outputs.benchmark_count }
+  timeout_count:
     description: "Number of tests that timed out"
-    value: ${{ steps.parse-result.outputs.timeout }
-  test-too-long:
+    value: ${{ steps.parse-result.outputs.timeout_count }
+  test-too-long_count:
     description: "Number of too long tests"
-    value: ${{ steps.parse-result.outputs.test-too-long }
-  wrong-version:
+    value: ${{ steps.parse-result.outputs.test-too-long_count }
+  wrong-version_count:
     description: "Number of tests with wrong version"
-    value: ${{ steps.parse-result.outputs.wrong-version }
-  wrong-build:
+    value: ${{ steps.parse-result.outputs.wrong-version_count }
+  wrong-build_count:
     description: "Number of tests with wrong build"
-    value: ${{ steps.parse-result.outputs.wrong-build }
-  wrong-tools:
+    value: ${{ steps.parse-result.outputs.wrong-build_count }
+  wrong-tools_count:
     description: "Number of tests with wrong tools"
-    value: ${{ steps.parse-result.outputs.wrong-tools }
-  wrong-header:
+    value: ${{ steps.parse-result.outputs.wrong-tools_count }
+  wrong-header_count:
     description: "Number of tests with wrong header"
-    value: ${{ steps.parse-result.outputs.wrong-header }
-  total:
+    value: ${{ steps.parse-result.outputs.wrong-header_count }
+  total_count:
     description: "Number of tests"
-    value: ${{ steps.parse-result.outputs.total }
+    value: ${{ steps.parse-result.outputs.total_count }
 
 runs:
   using: "composite"
@@ -134,19 +134,19 @@ runs:
       shell: bash
       run: |
         json=${{ env.logdir }}/report.json
-        echo "::set-output name=passed::`jq '.summary.passed_count' $json`"
-        echo "::set-output name=failed::`jq '.summary.failed_count' $json`"
-        echo "::set-output name=user-input::`jq '.summary.user-input_count' $json`"
-        echo "::set-output name=expected-fail::`jq '.summary.expected-fail_count' $json`"
-        echo "::set-output name=indeterminate::`jq '.summary.indeterminate_count' $json`"
-        echo "::set-output name=benchmark::`jq '.summary.benchmark_count' $json`"
-        echo "::set-output name=timeout::`jq '.summary.timeout_count' $json`"
-        echo "::set-output name=test-too-long::`jq '.summary.test-too-long_count' $json`"
-        echo "::set-output name=wrong-version::`jq '.summary.wrong-version_count' $json`"
-        echo "::set-output name=wrong-build::`jq '.summary.wrong-build_count' $json`"
-        echo "::set-output name=wrong-tools::`jq '.summary.wrong-tools_count' $json`"
-        echo "::set-output name=wrong-header::`jq '.summary.wrong-header_count' $json`"
-        echo "::set-output name=total::`jq '.summary.total_count' $json`"
+        echo "::set-output name=passed_count::`jq '.summary.passed_count' $json`"
+        echo "::set-output name=failed_count::`jq '.summary.failed_count' $json`"
+        echo "::set-output name=user-input_count::`jq '.summary.user-input_count' $json`"
+        echo "::set-output name=expected-fail_count::`jq '.summary.expected-fail_count' $json`"
+        echo "::set-output name=indeterminate_count::`jq '.summary.indeterminate_count' $json`"
+        echo "::set-output name=benchmark_count::`jq '.summary.benchmark_count' $json`"
+        echo "::set-output name=timeout_count::`jq '.summary.timeout_count' $json`"
+        echo "::set-output name=test-too-long_count::`jq '.summary.test-too-long_count' $json`"
+        echo "::set-output name=wrong-version_count::`jq '.summary.wrong-version_count' $json`"
+        echo "::set-output name=wrong-build_count::`jq '.summary.wrong-build_count' $json`"
+        echo "::set-output name=wrong-tools_count::`jq '.summary.wrong-tools_count' $json`"
+        echo "::set-output name=wrong-header_count::`jq '.summary.wrong-header_count' $json`"
+        echo "::set-output name=total_count::`jq '.summary.total_count' $json`"
     - if: ${{ steps.parse-result.outputs.failed != 0 || steps.parse-result.outputs.timeout != 0 }}
       shell: bash
       run: |
