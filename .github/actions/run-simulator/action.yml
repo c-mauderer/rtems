@@ -28,7 +28,7 @@ runs:
            found=1
         echo "rtems_test_args=${args}" >> $GITHUB_ENV
         echo "simulator_supported=${found}" >> $GITHUB_ENV
-    - if: ${{ env.simulator_supported == 1 }}
+    - if: ${{ env.simulator_supported == 0 }}
       shell: bash
       run: |
         # Check whether parameters for this simulator have been found
