@@ -36,7 +36,8 @@ jobs:
           sudo apt-get update
           sudo apt-get install \
             python3 \
-            python-is-python3
+            python-is-python3 \
+            jq
       - name: Download toolchain artifact
         uses: dawidd6/action-download-artifact@v2
         with:

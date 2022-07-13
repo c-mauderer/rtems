@@ -15,6 +15,47 @@ inputs:
     type: string
     required: true
 
+outputs:
+  passed:
+    description: "Number of passed tests"
+    value: ${{ steps.parse-result.outputs.passed }
+  failed:
+    description: "Number of failed tests"
+    value: ${{ steps.parse-result.outputs.failed }
+  user-input:
+    description: "Number of tests with user input"
+    value: ${{ steps.parse-result.outputs.user-input }
+  expected-fail:
+    description: "Number of expected fails"
+    value: ${{ steps.parse-result.outputs.expected-fail }
+  indeterminate:
+    description: "Number of indeterminate tests"
+    value: ${{ steps.parse-result.outputs.indeterminate }
+  benchmark:
+    description: "Number of benchmark tests"
+    value: ${{ steps.parse-result.outputs.benchmark }
+  timeout:
+    description: "Number of tests that timed out"
+    value: ${{ steps.parse-result.outputs.timeout }
+  test-too-long:
+    description: "Number of too long tests"
+    value: ${{ steps.parse-result.outputs.test-too-long }
+  wrong-version:
+    description: "Number of tests with wrong version"
+    value: ${{ steps.parse-result.outputs.wrong-version }
+  wrong-build:
+    description: "Number of tests with wrong build"
+    value: ${{ steps.parse-result.outputs.wrong-build }
+  wrong-tools:
+    description: "Number of tests with wrong tools"
+    value: ${{ steps.parse-result.outputs.wrong-tools }
+  wrong-header:
+    description: "Number of tests with wrong header"
+    value: ${{ steps.parse-result.outputs.wrong-header }
+  total:
+    description: "Number of tests"
+    value: ${{ steps.parse-result.outputs.total }
+
 runs:
   using: "composite"
   steps:
@@ -89,8 +130,25 @@ runs:
       with:
         name: test-logs-${{ env.shortname }}
         path: logs-${{ env.shortname }}
-    - name: Archive build (only for debugging)
-      uses: actions/upload-artifact@v3
-      with:
-        name: test-build-${{ env.shortname }}
-        path: build-${{ env.shortname }}/**/*.exe
+    - id: parse-result
+      shell: bash
+      run: |
+        json=${{ env.logdir }}/report.json
+        echo "::set-output name=passed::`jq '.summary.passed_count' $json`"
+        echo "::set-output name=failed::`jq '.summary.failed_count' $json`"
+        echo "::set-output name=user-input::`jq '.summary.user-input_count' $json`"
+        echo "::set-output name=expected-fail::`jq '.summary.expected-fail_count' $json`"
+        echo "::set-output name=indeterminate::`jq '.summary.indeterminate_count' $json`"
+        echo "::set-output name=benchmark::`jq '.summary.benchmark_count' $json`"
+        echo "::set-output name=timeout::`jq '.summary.timeout_count' $json`"
+        echo "::set-output name=test-too-long::`jq '.summary.test-too-long_count' $json`"
+        echo "::set-output name=wrong-version::`jq '.summary.wrong-version_count' $json`"
+        echo "::set-output name=wrong-build::`jq '.summary.wrong-build_count' $json`"
+        echo "::set-output name=wrong-tools::`jq '.summary.wrong-tools_count' $json`"
+        echo "::set-output name=wrong-header::`jq '.summary.wrong-header_count' $json`"
+        echo "::set-output name=total::`jq '.summary.total_count' $json`"
+    - if: ${{ steps.parse-result.outputs.failed != 0 || steps.parse-result.outputs.timeout != 0 }}
+      shell: bash
+      run: |
+        # fail if tests failed
+        false
