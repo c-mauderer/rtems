@@ -133,21 +133,9 @@ runs:
     - id: parse-result
       shell: bash
       run: |
-        json=${{ env.logdir }}/report.json
-        echo "::set-output name=passed_count::`jq '.summary.passed_count' $json`"
-        echo "::set-output name=failed_count::`jq '.summary.failed_count' $json`"
-        echo "::set-output name=user-input_count::`jq '.summary.user-input_count' $json`"
-        echo "::set-output name=expected-fail_count::`jq '.summary.expected-fail_count' $json`"
-        echo "::set-output name=indeterminate_count::`jq '.summary.indeterminate_count' $json`"
-        echo "::set-output name=benchmark_count::`jq '.summary.benchmark_count' $json`"
-        echo "::set-output name=timeout_count::`jq '.summary.timeout_count' $json`"
-        echo "::set-output name=test-too-long_count::`jq '.summary.test-too-long_count' $json`"
-        echo "::set-output name=wrong-version_count::`jq '.summary.wrong-version_count' $json`"
-        echo "::set-output name=wrong-build_count::`jq '.summary.wrong-build_count' $json`"
-        echo "::set-output name=wrong-tools_count::`jq '.summary.wrong-tools_count' $json`"
-        echo "::set-output name=wrong-header_count::`jq '.summary.wrong-header_count' $json`"
-        echo "::set-output name=total_count::`jq '.summary.total_count' $json`"
-    - if: ${{ steps.parse-result.outputs.failed != 0 || steps.parse-result.outputs.timeout != 0 }}
+        cat ${{ env.logdir }}/report.json | \
+            jq -r '.["summary"]|to_entries[]|("::set-output name="+.key+"::"+(.value|tostring))'
+    - if: ${{ steps.parse-result.outputs.failed_count != 0 || steps.parse-result.outputs.timeout_count != 0 }}
       shell: bash
       run: |
         # fail if tests failed
