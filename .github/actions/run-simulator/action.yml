@@ -71,13 +71,15 @@ runs:
           --out="${{ env.builddir }}" \
           --top="${{ inputs.sources-rtems }}" \
           --prefix="${{ inputs.prefix }}"
+        find ${{ env.builddir }} -name "*.exe"
     - shell: bash
       run: |
         # run tests
         ${{ inputs.prefix }}/bin/rtems-test \
           --log="${{ env.logdir }}/test.log" \
           --rtems-tools="${{ inputs.prefix }}" \
-          ${{ env.rtems_test_args }}
+          ${{ env.rtems_test_args }} \
+          ${{ env.builddir }}
     - name: Archive log
       uses: actions/upload-artifact@v3
       with:
