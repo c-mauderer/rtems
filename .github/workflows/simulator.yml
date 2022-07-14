@@ -69,4 +69,6 @@ jobs:
       - name: Show report on failure
         if: ${{ failure() }}
         run: |
-          echo "${{ steps.simulator.outputs.report }}" | jq -S '.summary'
+          jq -S '.summary' <<EOF170635471293847
+          ${{ steps.simulator.outputs.report }}
+          EOF170635471293847
