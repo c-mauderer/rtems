@@ -16,51 +16,9 @@ inputs:
     required: true
 
 outputs:
-  passed_count:
-    description: "Number of passed tests"
-    value: ${{ steps.parse-result.outputs.passed_count }}
-  failed_count:
-    description: "Number of failed tests"
-    value: ${{ steps.parse-result.outputs.failed_count }}
-  failed:
-    description: "Failed tests"
-    value: ${{ steps.parse-result.outputs.failed }}
-  user-input_count:
-    description: "Number of tests with user input"
-    value: ${{ steps.parse-result.outputs.user-input_count }}
-  expected-fail_count:
-    description: "Number of expected fails"
-    value: ${{ steps.parse-result.outputs.expected-fail_count }}
-  indeterminate_count:
-    description: "Number of indeterminate tests"
-    value: ${{ steps.parse-result.outputs.indeterminate_count }}
-  benchmark_count:
-    description: "Number of benchmark tests"
-    value: ${{ steps.parse-result.outputs.benchmark_count }}
-  timeout_count:
-    description: "Number of tests that timed out"
-    value: ${{ steps.parse-result.outputs.timeout_count }}
-  timeout:
-    description: "Timed out tests"
-    value: ${{ steps.parse-result.outputs.timeout }}
-  test-too-long_count:
-    description: "Number of too long tests"
-    value: ${{ steps.parse-result.outputs.test-too-long_count }}
-  wrong-version_count:
-    description: "Number of tests with wrong version"
-    value: ${{ steps.parse-result.outputs.wrong-version_count }}
-  wrong-build_count:
-    description: "Number of tests with wrong build"
-    value: ${{ steps.parse-result.outputs.wrong-build_count }}
-  wrong-tools_count:
-    description: "Number of tests with wrong tools"
-    value: ${{ steps.parse-result.outputs.wrong-tools_count }}
-  wrong-header_count:
-    description: "Number of tests with wrong header"
-    value: ${{ steps.parse-result.outputs.wrong-header_count }}
-  total_count:
-    description: "Number of tests"
-    value: ${{ steps.parse-result.outputs.total_count }}
+  report:
+    description: "Report in jaml format"
+    value: ${{ steps.parse-result.outputs.report }}
 
 runs:
   using: "composite"
@@ -143,12 +101,13 @@ runs:
       shell: bash
       run: |
         # Generate github outputs from report
+        # first: Put the complete jaml into one output
+        echo "::set-output name=report::$(jq -c . ${{ env.logdir }}/report.json)"
+        # second: Make results better accessible for later steps
         jq -r '.["summary"]|to_entries[]|("::set-output name="+.key+"::"+(.value|tostring))' ${{ env.logdir }}/report.json
-        echo "done"
-    - if: ${{ steps.parse-result.outputs.failed_count != 0 || steps.parse-result.outputs.timeout_count != 0 }}
+    - if: ${{ (steps.parse-result.outputs.passed_count + steps.parse-result.outputs.user-input_count + steps.parse-result.outputs.expected-fail_count + steps.parse-result.outputs.benchmark_count) != steps.parse-result.outputs.total_count }}
       shell: bash
       run: |
         # fail if tests failed
-        echo "${{ steps.parse-result.outputs.failed_count }} tests failed."
-        echo "${{ steps.parse-result.outputs.timeout_count }} tests timed out."
+        echo "only ${{ steps.parse-result.outputs.passed_count + steps.parse-result.outputs.user-input_count + steps.parse-result.outputs.expected-fail_count + steps.parse-result.outputs.benchmark_count }} from ${{ steps.parse-result.outputs.total_count }} tests as expected."
         false

@@ -66,10 +66,7 @@ jobs:
           target: ${{ matrix.simulators }}
           sources-rtems: "$GITHUB_WORKSPACE/rtems"
           prefix: "$GITHUB_WORKSPACE/toolchain/opt/rtems/6"
-      - name: List failed BSPs
+      - name: Show report on failure
         if: ${{ failure() }}
         run: |
-          echo "${{ steps.simulator.outputs.failed_count }} tests failed:"
-          echo "    ${{ steps.simulator.outputs.failed }}"
-          echo "${{ steps.simulator.outputs.timeout_count }} tests timed out:"
-          echo "    ${{ steps.simulator.outputs.timeout }}"
+          echo "${{ steps.simulator.outputs.report }}" | jq -S '.summary'
