@@ -105,9 +105,13 @@ runs:
         echo "::set-output name=report::$(jq -c . ${{ env.logdir }}/report.json)"
         # second: Make results better accessible for later steps
         jq -r '.["summary"]|to_entries[]|("::set-output name="+.key+"::"+(.value|tostring))' ${{ env.logdir }}/report.json
-    - if: ${{ (steps.parse-result.outputs.passed_count + steps.parse-result.outputs.user-input_count + steps.parse-result.outputs.expected-fail_count + steps.parse-result.outputs.benchmark_count) != steps.parse-result.outputs.total_count }}
-      shell: bash
+    - shell: bash
       run: |
-        # fail if tests failed
-        echo "only ${{ steps.parse-result.outputs.passed_count + steps.parse-result.outputs.user-input_count + steps.parse-result.outputs.expected-fail_count + steps.parse-result.outputs.benchmark_count }} from ${{ steps.parse-result.outputs.total_count }} tests as expected."
-        false
+        # check whether all tests worked as expected
+        tests_ok=$(expr \
+            ${{ steps.parse-result.outputs.passed_count }} + \
+            ${{ steps.parse-result.outputs.user-input_count }} + \
+            ${{ steps.parse-result.outputs.expected-fail_count }} + \
+            ${{ steps.parse-result.outputs.benchmark_count }})
+        expected=${{ steps.parse-result.outputs.total_count }}
+        [ $tests_ok -ne $expected ] && echo "only $tests_ok of $expected worked as expected." && false
