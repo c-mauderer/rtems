@@ -83,7 +83,8 @@ runs:
     - shell: bash
       run: |
         # run tests
-        ${{ inputs.prefix }}/bin/rtems-test \
+        # Note: PATH needs to be adapted so that for example qemu is found
+        PATH="${{ inputs.prefix }}/bin":$PATH rtems-test \
           --log="${{ env.logdir }}/test.log" \
           --log-mode=all \
           --report-path="${{ env.logdir }}/report" \
