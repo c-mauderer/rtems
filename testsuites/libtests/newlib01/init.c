@@ -43,6 +43,10 @@
 
 #include "tmacros.h"
 
+#ifndef _REENT_CLEANUP
+#define _REENT_CLEANUP(ptr) ((ptr)->__cleanup)
+#endif
+
 const char rtems_test_name[] = "NEWLIB 1";
 
 static const char stdio_file_path[] = "/stdio-file";
@@ -82,15 +86,61 @@ static void wait(void)
   rtems_test_assert(sc == RTEMS_SUCCESSFUL);
 }
 
+/*
+ * Check that rand() is properly initialized and returns the expected sequence
+ * for default seed values. A call to rand() without any previous call to
+ * srand() generates the same sequence as when srand() is first called with a
+ * seed value of 1.
+ */
+static void test_rand(void)
+{
+  int rv;
+
+  rv = rand();
+  rtems_test_assert(rv == 1481765933);
+  rv = rand();
+  rtems_test_assert(rv == 1085377743);
+  rv = rand();
+  rtems_test_assert(rv == 1270216262);
+
+  srand(1);
+  rv = rand();
+  rtems_test_assert(rv == 1481765933);
+  rv = rand();
+  rtems_test_assert(rv == 1085377743);
+  rv = rand();
+  rtems_test_assert(rv == 1270216262);
+}
+
+/*
+ * Check that lrand48() is properly initialized and returns the expected
+ * sequence for default seed values. A call to lrand48() without any previous
+ * call to srand48() uses default constant initializer values set in the _seed
+ * member of struct _rand48.
+ */
+static void test_lrand48(void)
+{
+  long rv;
+
+  rv = lrand48();
+  rtems_test_assert(rv == 851401618);
+  rv = lrand48();
+  rtems_test_assert(rv == 1804928587);
+  rv = lrand48();
+  rtems_test_assert(rv == 758783491);
+}
+
 static void stdio_file_worker(rtems_task_argument arg)
 {
   test_context *ctx = &test_instance;
-  struct _reent *reent = _REENT;
   FILE *output;
   char buf[1] = { 'x' };
   size_t n;
 
-  rtems_test_assert(reent->__cleanup == NULL);
+  test_rand();
+  test_lrand48();
+
+  rtems_test_assert(_REENT_CLEANUP(_REENT) == NULL);
 
   output = stdout = fopen(&stdio_file_path[0], "r+");
   rtems_test_assert(stdout != NULL);
@@ -98,9 +148,9 @@ static void stdio_file_worker(rtems_task_argument arg)
   /*
    * Check newlib's __sinit does not touch our assigned file pointer.
    */
-  rtems_test_assert(reent->__cleanup == NULL);
+  rtems_test_assert(_REENT_CLEANUP(_REENT) == NULL);
   rtems_test_assert(fflush(stdout) == 0);
-  rtems_test_assert(reent->__cleanup != NULL);
+  rtems_test_assert(_REENT_CLEANUP(_REENT) != NULL);
   rtems_test_assert(stdout == output);
 
   n = fwrite(&buf[0], sizeof(buf), 1, stdout);
@@ -454,6 +504,9 @@ static void Init(rtems_task_argument arg)
   int rv;
 
   TEST_BEGIN();
+  test_rand();
+  test_lrand48();
+
   ctx->main_task_id = rtems_task_self();
 
   /* Fill dynamic file pool in Newlib */

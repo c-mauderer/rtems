@@ -58,6 +58,9 @@ __FBSDID("$FreeBSD$");
 #include <sys/time.h>
 #include <sys/timex.h>
 #include <sys/timetc.h>
+#ifdef __rtems__
+#define	_KERNEL
+#endif /* __rtems__ */
 #include <sys/timepps.h>
 #ifndef __rtems__
 #include <sys/syscallsubr.h>
@@ -71,11 +74,31 @@ __FBSDID("$FreeBSD$");
 #define	ntp_update_second _Timecounter_NTP_update_second
 #define	time_uptime _Timecounter_Time_uptime
 struct thread;
+
+static inline long
+lmax(long a, long b)
+{
+
+	if (a > b)
+		return (a);
+	return (b);
+}
+
+static inline quad_t
+qmin(quad_t a, quad_t b)
+{
+
+	if (a < b)
+	       return (a);
+	return (b);
+}
 #endif /* __rtems__ */
 
+#ifndef __rtems__
 #ifdef PPS_SYNC
 FEATURE(pps_sync, "Support usage of external PPS signal by kernel PLL");
 #endif
+#endif /* __rtems__ */
 
 /*
  * Single-precision macros for 64-bit machines
@@ -374,7 +397,6 @@ SYSCTL_NODE(_kern, OID_AUTO, ntp_pll, CTLFLAG_RW | CTLFLAG_MPSAFE, 0,
 SYSCTL_PROC(_kern_ntp_pll, OID_AUTO, gettime, CTLTYPE_OPAQUE | CTLFLAG_RD |
     CTLFLAG_MPSAFE, 0, sizeof(struct ntptimeval) , ntp_sysctl, "S,ntptimeval",
     "");
-#endif /* __rtems__ */
 
 #ifdef PPS_SYNC
 SYSCTL_INT(_kern_ntp_pll, OID_AUTO, pps_shiftmax, CTLFLAG_RW,
@@ -391,6 +413,7 @@ SYSCTL_S64(_kern_ntp_pll, OID_AUTO, time_freq, CTLFLAG_RD | CTLFLAG_MPSAFE,
     &time_freq, 0,
     "Frequency offset (ns/sec)");
 #endif
+#endif /* __rtems__ */
 
 /*
  * ntp_adjtime() - NTP daemon application interface
@@ -531,16 +554,6 @@ kern_ntp_adjtime(struct thread *td, struct timex *ntv, int *retvalp)
 	ntv->jitcnt = pps_jitcnt;
 	ntv->stbcnt = pps_stbcnt;
 #endif /* PPS_SYNC */
-#ifdef __rtems__
-	ntv->ppsfreq = 0;
-	ntv->jitter = 0;
-	ntv->shift = 0;
-	ntv->stabil = 0;
-	ntv->jitcnt = 0;
-	ntv->calcnt = 0;
-	ntv->errcnt = 0;
-	ntv->stbcnt = 0;
-#endif /* __rtems__ */
 	retval = ntp_is_time_error(time_status) ? TIME_ERROR : time_state;
 	NTP_UNLOCK();
 

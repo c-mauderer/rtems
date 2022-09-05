@@ -1,7 +1,10 @@
 SPDX-License-Identifier: CC-BY-SA-4.0 OR BSD-2-Clause
 build-type: group
+cflags: []
 copyrights:
 - Copyright (C) 2020 embedded brains GmbH (http://www.embedded-brains.de)
+cppflags: []
+cxxflags: []
 enabled-by: true
 includes: []
 install: []
@@ -28,7 +31,7 @@ links:
 - role: build-dependency
   uid: ../../objmem
 - role: build-dependency
-  uid: optextirqmax
+  uid: ../optextirqmax
 - role: build-dependency
   uid: ../grp
 - role: build-dependency

@@ -11,7 +11,6 @@ install:
 - destination: ${BSP_INCLUDEDIR}
   source:
   - bsps/arm/fvp/include/bsp.h
-  - bsps/arm/fvp/include/tm27.h
 - destination: ${BSP_INCLUDEDIR}/bsp
   source:
   - bsps/arm/fvp/include/bsp/irq.h
@@ -34,7 +33,6 @@ source:
 - bsps/shared/dev/btimer/btimer-cpucounter.c
 - bsps/shared/dev/clock/arm-generic-timer.c
 - bsps/shared/dev/getentropy/getentropy-cpucounter.c
-- bsps/shared/dev/irq/arm-gicv3.c
 - bsps/shared/dev/serial/console-termios.c
 - bsps/shared/irq/irq-default-handler.c
 - bsps/shared/start/bspfatal-default.c

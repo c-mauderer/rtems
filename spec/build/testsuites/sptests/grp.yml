@@ -1,7 +1,10 @@
 SPDX-License-Identifier: CC-BY-SA-4.0 OR BSD-2-Clause
 build-type: group
+cflags: []
 copyrights:
 - Copyright (C) 2020 embedded brains GmbH (http://www.embedded-brains.de)
+cppflags: []
+cxxflags: []
 enabled-by:
 - BUILD_TESTS
 - BUILD_SPTESTS
@@ -350,6 +353,8 @@ links:
 - role: build-dependency
   uid: spporterr01
 - role: build-dependency
+  uid: sppps01
+- role: build-dependency
   uid: spprintk
 - role: build-dependency
   uid: spprivenv01
@@ -389,6 +394,8 @@ links:
   uid: spsimplesched03
 - role: build-dependency
   uid: spsize
+- role: build-dependency
+  uid: spstdc17
 - role: build-dependency
   uid: spstdthreads01
 - role: build-dependency
@@ -443,6 +450,8 @@ links:
   uid: sptls03
 - role: build-dependency
   uid: sptls04
+- role: build-dependency
+  uid: spunlimited01
 - role: build-dependency
   uid: spversion01
 - role: build-dependency

@@ -116,13 +116,16 @@ extern "C" {
 #else /* ARM_MULTILIB_ARCH_V4 */
 
 /* AArch64 GICv3 registers are not named in GCC */
-#define ICC_IGRPEN0 "S3_0_C12_C12_6, %0"
-#define ICC_IGRPEN1 "S3_0_C12_C12_7, %0"
+#define ICC_IGRPEN0_EL1 "S3_0_C12_C12_6, %0"
+#define ICC_IGRPEN1_EL1 "S3_0_C12_C12_7, %0"
 #define ICC_IGRPEN1_EL3 "S3_6_C12_C12_7, %0"
+#define ICC_IGRPEN0 ICC_IGRPEN0_EL1
+#define ICC_IGRPEN1 ICC_IGRPEN1_EL1
 #define ICC_PMR     "S3_0_C4_C6_0, %0"
 #define ICC_EOIR1   "S3_0_C12_C12_1, %0"
 #define ICC_SRE     "S3_0_C12_C12_5, %0"
 #define ICC_BPR0    "S3_0_C12_C8_3, %0"
+#define ICC_BPR1    "S3_0_C12_C12_3, %0"
 #define ICC_CTLR    "S3_0_C12_C12_4, %0"
 #define ICC_IAR1    "%0, S3_0_C12_C12_0"
 #define MPIDR       "%0, mpidr_el1"
@@ -302,10 +305,25 @@ static void gicv3_init_dist(volatile gic_dist *dist)
 
 static void gicv3_init_cpu_interface(uint32_t cpu_index)
 {
-  uint32_t sre_value = 0x7;
-  WRITE_SR(ICC_SRE, sre_value);
-  WRITE_SR(ICC_PMR, GIC_CPUIF_ICCPMR_PRIORITY(0xff));
-  WRITE_SR(ICC_BPR0, GIC_CPUIF_ICCBPR_BINARY_POINT(0x0));
+  /* Initialize Interrupt Controller System Register Enable Register */
+#ifdef BSP_ARM_GIC_ICC_SRE
+  WRITE_SR(ICC_SRE, BSP_ARM_GIC_ICC_SRE);
+#endif
+
+  /* Initialize Interrupt Controller Interrupt Priority Mask Register */
+#ifdef BSP_ARM_GIC_ICC_PMR
+  WRITE_SR(ICC_PMR, BSP_ARM_GIC_ICC_PMR);
+#endif
+
+  /* Initialize Interrupt Controller Binary Point Register 0 */
+#ifdef BSP_ARM_GIC_ICC_BPR0
+  WRITE_SR(ICC_BPR0, BSP_ARM_GIC_ICC_BPR0);
+#endif
+
+  /* Initialize Interrupt Controller Binary Point Register 1 */
+#ifdef BSP_ARM_GIC_ICC_BPR1
+  WRITE_SR(ICC_BPR1, BSP_ARM_GIC_ICC_BPR1);
+#endif
 
   volatile gic_redist *redist = gicv3_get_redist(cpu_index);
   uint32_t waker = redist->icrwaker;
@@ -321,10 +339,20 @@ static void gicv3_init_cpu_interface(uint32_t cpu_index)
     sgi_ppi->icspiprior[id] = PRIORITY_DEFAULT;
   }
 
-  /* Enable interrupt groups 0 and 1 */
-  WRITE_SR(ICC_IGRPEN0, 0x1);
-  WRITE_SR(ICC_IGRPEN1, 0x1);
-  WRITE_SR(ICC_CTLR, 0x0);
+  /* Initialize Interrupt Controller Interrupt Group Enable 0 Register */
+#ifdef BSP_ARM_GIC_ICC_IGRPEN0
+  WRITE_SR(ICC_IGRPEN0, BSP_ARM_GIC_ICC_IGRPEN0);
+#endif
+
+  /* Initialize Interrupt Controller Interrupt Group Enable 1 Register */
+#ifdef BSP_ARM_GIC_ICC_IGRPEN1
+  WRITE_SR(ICC_IGRPEN1, BSP_ARM_GIC_ICC_IGRPEN1);
+#endif
+
+  /* Initialize Interrupt Controller Control Register */
+#ifdef BSP_ARM_GIC_ICC_CTRL
+  WRITE_SR(ICC_CTLR, BSP_ARM_GIC_ICC_CTRL);
+#endif
 }
 
 static inline void gicv3_get_attributes(

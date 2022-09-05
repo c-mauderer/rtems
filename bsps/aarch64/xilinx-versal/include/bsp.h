@@ -47,6 +47,7 @@
 #ifndef ASM
 
 #include <bsp/default-initial-extension.h>
+#include <bsp/linker-symbols.h>
 #include <bsp/start.h>
 
 #include <rtems.h>
@@ -61,6 +62,14 @@ extern "C" {
 
 #define BSP_RESET_SMC
 
+/*
+ * DDRMC mapping
+ */
+LINKER_SYMBOL(bsp_r0_ram_base)
+LINKER_SYMBOL(bsp_r0_ram_end)
+LINKER_SYMBOL(bsp_r1_ram_base)
+LINKER_SYMBOL(bsp_r1_ram_end)
+
 /**
  * @brief Versal specific set up of the MMU.
  *
@@ -69,6 +78,10 @@ extern "C" {
 BSP_START_TEXT_SECTION void versal_setup_mmu_and_cache(void);
 
 void versal_debug_console_flush(void);
+
+uint32_t versal_clock_i2c0(void);
+
+uint32_t versal_clock_i2c1(void);
 
 #ifdef __cplusplus
 }

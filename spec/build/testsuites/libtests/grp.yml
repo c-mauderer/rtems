@@ -1,7 +1,10 @@
 SPDX-License-Identifier: CC-BY-SA-4.0 OR BSD-2-Clause
 build-type: group
+cflags: []
 copyrights:
 - Copyright (C) 2020 embedded brains GmbH (http://www.embedded-brains.de)
+cppflags: []
+cxxflags: []
 enabled-by:
 - BUILD_TESTS
 - BUILD_LIBTESTS
@@ -113,6 +116,8 @@ links:
   uid: exit01
 - role: build-dependency
   uid: exit02
+- role: build-dependency
+  uid: exit03
 - role: build-dependency
   uid: fcntl
 - role: build-dependency

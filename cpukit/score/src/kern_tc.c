@@ -56,12 +56,17 @@
 #define	timecounter _Timecounter
 #define	time_second _Timecounter_Time_second
 #define	time_uptime _Timecounter_Time_uptime
+
 #include <rtems/score/timecounterimpl.h>
+#include <rtems/score/assert.h>
 #include <rtems/score/atomic.h>
 #include <rtems/score/smp.h>
 #include <rtems/score/todimpl.h>
 #include <rtems/score/watchdogimpl.h>
 #include <rtems/rtems/clock.h>
+
+#define	ENOIOCTL EINVAL
+#define	KASSERT(exp, arg) _Assert(exp)
 #endif /* __rtems__ */
 #include <sys/cdefs.h>
 __FBSDID("$FreeBSD$");
@@ -90,6 +95,7 @@ __FBSDID("$FreeBSD$");
 #include <sys/vdso.h>
 #endif /* __rtems__ */
 #ifdef __rtems__
+#include <errno.h>
 #include <limits.h>
 #include <string.h>
 #include <rtems.h>
@@ -112,6 +118,13 @@ atomic_thread_fence_rel(void)
 {
 
 	_Atomic_Fence(ATOMIC_ORDER_RELEASE);
+}
+
+static inline u_int
+atomic_load_int(Atomic_Uint *i)
+{
+
+	return (_Atomic_Load_uint(i, ATOMIC_ORDER_RELAXED));
 }
 
 static inline u_int
@@ -1506,7 +1519,6 @@ unlock:
 #endif /* __rtems__ */
 }
 
-#ifndef __rtems__
 /* Report the frequency of the current timecounter. */
 uint64_t
 tc_getfrequency(void)
@@ -1515,6 +1527,7 @@ tc_getfrequency(void)
 	return (timehands->th_counter->tc_frequency);
 }
 
+#ifndef __rtems__
 static bool
 sleeping_on_old_rtc(struct thread *td)
 {
@@ -1891,7 +1904,6 @@ SYSCTL_PROC(_kern_timecounter, OID_AUTO, choice,
     "Timecounter hardware detected");
 #endif /* __rtems__ */
 
-#ifndef __rtems__
 /*
  * RFC 2783 PPS-API implementation.
  */
@@ -1910,9 +1922,15 @@ abi_aware(struct pps_state *pps, int vers)
 static int
 pps_fetch(struct pps_fetch_args *fapi, struct pps_state *pps)
 {
+#ifndef __rtems__
 	int err, timo;
+#else /* __rtems__ */
+	int err;
+#endif /* __rtems__ */
 	pps_seq_t aseq, cseq;
+#ifndef __rtems__
 	struct timeval tv;
+#endif /* __rtems__ */
 
 	if (fapi->tsformat && fapi->tsformat != PPS_TSFMT_TSPEC)
 		return (EINVAL);
@@ -1925,6 +1943,7 @@ pps_fetch(struct pps_fetch_args *fapi, struct pps_state *pps)
 	 * sleep a long time.
 	 */
 	if (fapi->timeout.tv_sec || fapi->timeout.tv_nsec) {
+#ifndef __rtems__
 		if (fapi->timeout.tv_sec == -1)
 			timo = 0x7fffffff;
 		else {
@@ -1932,10 +1951,12 @@ pps_fetch(struct pps_fetch_args *fapi, struct pps_state *pps)
 			tv.tv_usec = fapi->timeout.tv_nsec / 1000;
 			timo = tvtohz(&tv);
 		}
+#endif /* __rtems__ */
 		aseq = atomic_load_int(&pps->ppsinfo.assert_sequence);
 		cseq = atomic_load_int(&pps->ppsinfo.clear_sequence);
 		while (aseq == atomic_load_int(&pps->ppsinfo.assert_sequence) &&
 		    cseq == atomic_load_int(&pps->ppsinfo.clear_sequence)) {
+#ifndef __rtems__
 			if (abi_aware(pps, 1) && pps->driver_mtx != NULL) {
 				if (pps->flags & PPSFLAG_MTX_SPIN) {
 					err = msleep_spin(pps, pps->driver_mtx,
@@ -1956,6 +1977,12 @@ pps_fetch(struct pps_fetch_args *fapi, struct pps_state *pps)
 			} else if (err != 0) {
 				return (err);
 			}
+#else /* __rtems__ */
+			_Assert(pps->wait != NULL);
+			err = (*pps->wait)(pps, fapi->timeout);
+			if (err != 0)
+				return (err);
+#endif /* __rtems__ */
 		}
 	}
 
@@ -2051,9 +2078,43 @@ pps_ioctl(u_long cmd, caddr_t data, struct pps_state *pps)
 	}
 }
 
+#ifdef __rtems__
+/*
+ * The real implementation of hardpps() is defined in kern_ntptime.c.  Use it
+ * only if the NTP support is needed by the application.
+ */
+RTEMS_WEAK void
+hardpps(struct timespec *tsp, long nsec)
+{
+
+	(void)tsp;
+	(void)nsec;
+}
+
+static int
+default_wait(struct pps_state *pps, struct timespec timeout)
+{
+
+	(void)pps;
+	(void)timeout;
+
+	return (ETIMEDOUT);
+}
+
+static void
+default_wakeup(struct pps_state *pps)
+{
+
+	(void)pps;
+}
+#endif /* __rtems__ */
 void
 pps_init(struct pps_state *pps)
 {
+#ifdef __rtems__
+	pps->wait = default_wait;
+	pps->wakeup = default_wakeup;
+#endif /* __rtems__ */
 	pps->ppscap |= PPS_TSFMT_TSPEC | PPS_CANWAIT;
 	if (pps->ppscap & PPS_CAPTUREASSERT)
 		pps->ppscap |= PPS_OFFSETASSERT;
@@ -2089,9 +2150,11 @@ pps_capture(struct pps_state *pps)
 	pps->capffth = fftimehands;
 #endif
 	pps->capcount = th->th_counter->tc_get_timecount(th->th_counter);
+#if defined(RTEMS_SMP)
 	atomic_thread_fence_acq();
 	if (pps->capgen != th->th_generation)
 		pps->capgen = 0;
+#endif
 }
 
 void
@@ -2116,7 +2179,11 @@ pps_event(struct pps_state *pps, int event)
 	if ((event & pps->ppsparam.mode) == 0)
 		return;
 	/* If the timecounter was wound up underneath us, bail out. */
+#if defined(RTEMS_SMP)
 	if (pps->capgen == 0 || pps->capgen !=
+#else
+	if (pps->capgen !=
+#endif
 	    atomic_load_acq_int(&pps->capth->th_generation))
 		return;
 
@@ -2220,11 +2287,13 @@ pps_event(struct pps_state *pps, int event)
 #endif
 
 	/* Wakeup anyone sleeping in pps_fetch().  */
+#ifndef __rtems__
 	wakeup(pps);
-}
 #else /* __rtems__ */
-/* FIXME: https://devel.rtems.org/ticket/2349 */
+	_Assert(pps->wakeup != NULL);
+	(*pps->wakeup)(pps);
 #endif /* __rtems__ */
+}
 
 /*
  * Timecounters need to be updated every so often to prevent the hardware
@@ -2260,9 +2329,13 @@ _Timecounter_Tick(void)
 {
 	Per_CPU_Control *cpu_self = _Per_CPU_Get();
 
+#if defined(RTEMS_SMP)
 	if (_Per_CPU_Is_boot_processor(cpu_self)) {
+#endif
                 tc_windup(NULL);
+#if defined(RTEMS_SMP)
 	}
+#endif
 
 	_Watchdog_Tick(cpu_self);
 }

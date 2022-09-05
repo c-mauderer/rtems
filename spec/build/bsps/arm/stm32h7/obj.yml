@@ -11,7 +11,6 @@ install:
 - destination: ${BSP_INCLUDEDIR}
   source:
   - bsps/arm/stm32h7/include/bsp.h
-  - bsps/arm/stm32h7/include/tm27.h
   - bsps/arm/stm32h7/include/chip.h
   - bsps/arm/stm32h7/include/stm32_assert_template.h
   - bsps/arm/stm32h7/include/stm32h742xx.h
@@ -171,7 +170,6 @@ install:
   - bsps/arm/stm32h7/include/stm32h7/mpu-config.h
 links: []
 source:
-- bsps/arm/shared/cache/cache-v7m.c
 - bsps/arm/shared/clock/clock-armv7m.c
 - bsps/arm/shared/cpucounter/cpucounter-armv7m.c
 - bsps/arm/shared/irq/irq-armv7m.c

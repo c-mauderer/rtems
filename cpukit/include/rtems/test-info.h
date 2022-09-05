@@ -70,7 +70,7 @@ void rtems_test_fatal_extension(
  * @brief Initial extension for tests.
  */
 #define RTEMS_TEST_INITIAL_EXTENSION \
-  { NULL, NULL, NULL, NULL, NULL, NULL, NULL, rtems_test_fatal_extension }
+  { NULL, NULL, NULL, NULL, NULL, NULL, NULL, rtems_test_fatal_extension, NULL }
 
 /**
  * @brief Test states.
@@ -108,14 +108,14 @@ typedef enum
 /**
  * @brief Prints a begin of test message using printf().
  *
- * @returns As specified by printf().
+ * @return As specified by printf().
  */
 int rtems_test_begin(const char* name, const RTEMS_TEST_STATE state);
 
 /**
  * @brief Prints an end of test message using printf().
  *
- * @returns As specified by printf().
+ * @return As specified by printf().
  */
 int rtems_test_end(const char* name);
 
@@ -128,7 +128,7 @@ RTEMS_NO_RETURN void rtems_test_exit(int status);
 /**
  * @brief Prints via the RTEMS printer.
  *
- * @returns As specified by printf().
+ * @return As specified by printf().
  */
 int rtems_test_printf(const char* format, ...) RTEMS_PRINTFLIKE(1, 2);
 
@@ -330,6 +330,12 @@ RTEMS_NO_RETURN void rtems_test_run(
   rtems_task_argument    arg,
   const RTEMS_TEST_STATE state
 );
+
+/**
+ * @brief Dumps the gcov information as a base64 encoded gcfn and gcda data
+ *   stream using rtems_put_char().
+ */
+void rtems_test_gcov_dump_info( void );
 
 /** @} */
 

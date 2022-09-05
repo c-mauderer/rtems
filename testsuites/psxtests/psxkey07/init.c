@@ -55,8 +55,16 @@ rtems_task Test_Thread(rtems_task_argument argument)
   int *value_p, *value_p2;
 
   value_p = malloc( sizeof( int ) );
-  sc = pthread_setspecific( Key, value_p );
-  rtems_test_assert( !sc );
+  rtems_test_assert(value_p != NULL);
+/*
+ * This was added to address the following warning.
+ * warning: 'value_p' may be used uninitialized
+ */
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wmaybe-uninitialized"
+ sc = pthread_setspecific( Key, value_p );
+#pragma GCC diagnostic pop
+ rtems_test_assert( !sc );
 
   pthread_mutex_lock( &mutex1 );
   ++setted_thread_count;
@@ -119,7 +127,7 @@ rtems_task Init(rtems_task_argument argument)
     pthread_mutex_lock( &mutex1 );
 
     rc = rtems_task_create(
-      rtems_build_name( 'T', 'E', 'S', 'T' ), 
+      rtems_build_name( 'T', 'E', 'S', 'T' ),
       1,
       RTEMS_MINIMUM_STACK_SIZE,
       RTEMS_DEFAULT_MODES,

@@ -1,9 +1,28 @@
+/* SPDX-License-Identifier: BSD-2-Clause */
+
 /*
  * Copyright (c) 2017 embedded brains GmbH.  All rights reserved.
  *
- * The license and distribution terms for this file may be
- * found in the file LICENSE in this distribution or at
- * http://www.rtems.org/license/LICENSE.
+ * Redistribution and use in source and binary forms, with or without
+ * modification, are permitted provided that the following conditions
+ * are met:
+ * 1. Redistributions of source code must retain the above copyright
+ *    notice, this list of conditions and the following disclaimer.
+ * 2. Redistributions in binary form must reproduce the above copyright
+ *    notice, this list of conditions and the following disclaimer in the
+ *    documentation and/or other materials provided with the distribution.
+ *
+ * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
+ * AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
+ * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
+ * ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT OWNER OR CONTRIBUTORS BE
+ * LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR
+ * CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF
+ * SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS
+ * INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN
+ * CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
+ * ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
+ * POSSIBILITY OF SUCH DAMAGE.
  */
 
 #include <bsp.h>
@@ -14,6 +33,7 @@
 #include <bsp/linker-symbols.h>
 #include <dev/clock/arm-generic-timer.h>
 #include <libcpu/arm-cp15.h>
+#include <arm/freescale/imx/imx6ul_ccmreg.h>
 
 #include <libfdt.h>
 
@@ -161,6 +181,24 @@ static void imx_find_gic(const void *fdt)
 #endif
 }
 
+static void imx_ccm_enable_eth2_clk(void)
+{
+  const void *fdt = bsp_fdt_get();
+
+  if (imx_is_imx6(fdt)) {
+    int node;
+    volatile imx6ul_ccm_analog *ccm_analog = NULL;
+
+    node = fdt_node_offset_by_compatible(fdt, -1, "fsl,imx6ul-anatop");
+    if (node >= 0) {
+        ccm_analog = imx_get_reg_of_node(fdt, node);
+    }
+    if (ccm_analog != NULL) {
+        ccm_analog->pll_enet_set = IMX6UL_CCM_ANALOG_PLL_ENET_ENET2_125M_EN;
+    }
+  }
+}
+
 void bsp_start(void)
 {
   imx_find_gic(bsp_fdt_get());
@@ -169,4 +207,5 @@ void bsp_start(void)
     bsp_section_nocacheheap_begin,
     (uintptr_t) bsp_section_nocacheheap_size
   );
+  imx_ccm_enable_eth2_clk();
 }

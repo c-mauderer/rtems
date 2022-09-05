@@ -1,3 +1,5 @@
+/* SPDX-License-Identifier: BSD-2-Clause */
+
 /**
  * @file
  *
@@ -7,11 +9,28 @@
  */
 
 /*
- * Copyright (c) 2009 embedded brains GmbH.  All rights reserved.
+ * Copyright (C) 2009, 2022 embedded brains GmbH
  *
- * The license and distribution terms for this file may be
- * found in the file LICENSE in this distribution or at
- * http://www.rtems.org/license/LICENSE.
+ * Redistribution and use in source and binary forms, with or without
+ * modification, are permitted provided that the following conditions
+ * are met:
+ * 1. Redistributions of source code must retain the above copyright
+ *    notice, this list of conditions and the following disclaimer.
+ * 2. Redistributions in binary form must reproduce the above copyright
+ *    notice, this list of conditions and the following disclaimer in the
+ *    documentation and/or other materials provided with the distribution.
+ *
+ * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
+ * AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
+ * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
+ * ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT OWNER OR CONTRIBUTORS BE
+ * LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR
+ * CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF
+ * SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS
+ * INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN
+ * CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
+ * ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
+ * POSSIBILITY OF SUCH DAMAGE.
  */
 
 #include <rtems/score/armv4.h>
@@ -23,12 +42,8 @@
 #include <bsp/linker-symbols.h>
 #include <bsp/mmu.h>
 
-/*
- * Mask out SIC 1 and 2 IRQ request. There is no need to mask out the FIQ,
- * since a pending FIQ would be a fatal error.  The default handler will be
- * invoked in this case.
- */
-#define LPC32XX_MIC_STATUS_MASK (~0x3U)
+/* Mask out SIC 1 and 2 IRQ/FIQ requests */
+#define LPC32XX_MIC_STATUS_MASK 0x3ffffffcU
 
 typedef union {
   struct {
@@ -44,6 +59,14 @@ static uint8_t lpc32xx_irq_priority_table [LPC32XX_IRQ_COUNT];
 static lpc32xx_irq_fields lpc32xx_irq_priority_masks [LPC32XX_IRQ_PRIORITY_COUNT];
 
 static lpc32xx_irq_fields lpc32xx_irq_enable;
+
+static const lpc32xx_irq_fields lpc32xx_irq_is_valid = {
+  .field = {
+    .mic = 0x3fffeff8U,
+    .sic_1 = 0xffde71d6U,
+    .sic_2 = 0x9fdc9fffU
+  }
+};
 
 static inline bool lpc32xx_irq_priority_is_valid(unsigned priority)
 {
@@ -88,6 +111,16 @@ static inline void lpc32xx_irq_clear_bit_in_register(unsigned index, unsigned re
   *reg &= ~(1U << bit);
 }
 
+static inline bool lpc32xx_irq_is_bit_set_in_field(
+  unsigned index,
+  const lpc32xx_irq_fields *fields
+)
+{
+  LPC32XX_IRQ_BIT_OPS_DEFINE;
+
+  return fields->fields_table [module] & (1U << bit);
+}
+
 static inline void lpc32xx_irq_set_bit_in_field(unsigned index, lpc32xx_irq_fields *fields)
 {
   LPC32XX_IRQ_BIT_OPS_DEFINE;
@@ -100,6 +133,15 @@ static inline void lpc32xx_irq_clear_bit_in_field(unsigned index, lpc32xx_irq_fi
   LPC32XX_IRQ_BIT_OPS_DEFINE;
 
   fields->fields_table [module] &= ~(1U << bit);
+}
+
+bool bsp_interrupt_is_valid_vector(rtems_vector_number vector)
+{
+  if (vector >= BSP_INTERRUPT_VECTOR_COUNT) {
+    return false;
+  }
+
+  return lpc32xx_irq_is_bit_set_in_field(vector, &lpc32xx_irq_is_valid);
 }
 
 static inline unsigned lpc32xx_irq_get_index(uint32_t val)
@@ -211,7 +253,14 @@ lpc32xx_irq_activation_type lpc32xx_irq_get_activation_type(rtems_vector_number 
 
 void bsp_interrupt_dispatch(void)
 {
-  uint32_t status = lpc32xx.mic.sr & LPC32XX_MIC_STATUS_MASK;
+  /*
+   * Do not dispatch interrupts configured as FIQ.  Use the corresponding
+   * interrupt type register to mask these interrupts.  The status register may
+   * indicate an interrupt configured for FIQ before the FIQ exception is
+   * serviced by the processor.
+   */
+  uint32_t status = (lpc32xx.mic.sr & ~lpc32xx.mic.itr) &
+    LPC32XX_MIC_STATUS_MASK;
   uint32_t er_mic = lpc32xx.mic.er;
   uint32_t er_sic_1 = lpc32xx.sic_1.er;
   uint32_t er_sic_2 = lpc32xx.sic_2.er;
@@ -223,11 +272,11 @@ void bsp_interrupt_dispatch(void)
   if (status != 0) {
     vector = lpc32xx_irq_get_index(status);
   } else {
-    status = lpc32xx.sic_1.sr;
+    status = lpc32xx.sic_1.sr & ~lpc32xx.sic_1.itr;
     if (status != 0) {
       vector = lpc32xx_irq_get_index(status) + LPC32XX_IRQ_MODULE_SIC_1;
     } else {
-      status = lpc32xx.sic_2.sr;
+      status = lpc32xx.sic_2.sr & ~lpc32xx.sic_2.itr;
       if (status != 0) {
         vector = lpc32xx_irq_get_index(status) + LPC32XX_IRQ_MODULE_SIC_2;
       } else {
@@ -260,6 +309,24 @@ rtems_status_code bsp_interrupt_get_attributes(
   rtems_interrupt_attributes *attributes
 )
 {
+  bool is_sw_irq;
+
+  bsp_interrupt_assert(bsp_interrupt_is_valid_vector(vector));
+  bsp_interrupt_assert(attributes != NULL);
+
+  attributes->is_maskable =
+    !lpc32xx_irq_is_bit_set_in_register(vector, LPC32XX_IRQ_OFFSET_ITR);
+  attributes->can_enable = true;
+  attributes->maybe_enable = true;
+  attributes->can_disable = true;
+  attributes->maybe_disable = true;
+  is_sw_irq = vector == LPC32XX_IRQ_SW;
+  attributes->can_raise = is_sw_irq;
+  attributes->can_raise_on = is_sw_irq;
+  attributes->can_clear = is_sw_irq;
+  attributes->can_get_affinity = true;
+  attributes->can_set_affinity = true;
+
   return RTEMS_SUCCESSFUL;
 }
 
@@ -270,20 +337,36 @@ rtems_status_code bsp_interrupt_is_pending(
 {
   bsp_interrupt_assert(bsp_interrupt_is_valid_vector(vector));
   bsp_interrupt_assert(pending != NULL);
-  *pending = false;
-  return RTEMS_UNSATISFIED;
+
+  *pending = lpc32xx_irq_is_bit_set_in_register(vector, LPC32XX_IRQ_OFFSET_RSR);
+
+  return RTEMS_SUCCESSFUL;
 }
 
 rtems_status_code bsp_interrupt_raise(rtems_vector_number vector)
 {
   bsp_interrupt_assert(bsp_interrupt_is_valid_vector(vector));
-  return RTEMS_UNSATISFIED;
+
+  if (vector != LPC32XX_IRQ_SW) {
+    return RTEMS_UNSATISFIED;
+  }
+
+  LPC32XX_SW_INT = 0x1;
+
+  return RTEMS_SUCCESSFUL;
 }
 
 rtems_status_code bsp_interrupt_clear(rtems_vector_number vector)
 {
   bsp_interrupt_assert(bsp_interrupt_is_valid_vector(vector));
-  return RTEMS_UNSATISFIED;
+
+  if (vector != LPC32XX_IRQ_SW) {
+    return RTEMS_UNSATISFIED;
+  }
+
+  LPC32XX_SW_INT = 0x0;
+
+  return RTEMS_SUCCESSFUL;
 }
 
 rtems_status_code bsp_interrupt_vector_is_enabled(
@@ -293,8 +376,10 @@ rtems_status_code bsp_interrupt_vector_is_enabled(
 {
   bsp_interrupt_assert(bsp_interrupt_is_valid_vector(vector));
   bsp_interrupt_assert(enabled != NULL);
-  *enabled = false;
-  return RTEMS_UNSATISFIED;
+
+  *enabled = lpc32xx_irq_is_bit_set_in_field(vector, &lpc32xx_irq_enable);
+
+  return RTEMS_SUCCESSFUL;
 }
 
 rtems_status_code bsp_interrupt_vector_enable(rtems_vector_number vector)
@@ -304,8 +389,12 @@ rtems_status_code bsp_interrupt_vector_enable(rtems_vector_number vector)
   bsp_interrupt_assert(bsp_interrupt_is_valid_vector(vector));
 
   rtems_interrupt_disable(level);
-  lpc32xx_irq_set_bit_in_register(vector, LPC32XX_IRQ_OFFSET_ER);
-  lpc32xx_irq_set_bit_in_field(vector, &lpc32xx_irq_enable);
+
+  if (!lpc32xx_irq_is_bit_set_in_field(vector, &lpc32xx_irq_enable)) {
+    lpc32xx_irq_set_bit_in_field(vector, &lpc32xx_irq_enable);
+    lpc32xx_irq_set_bit_in_register(vector, LPC32XX_IRQ_OFFSET_ER);
+  }
+
   rtems_interrupt_enable(level);
 
   return RTEMS_SUCCESSFUL;

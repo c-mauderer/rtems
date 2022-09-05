@@ -125,26 +125,6 @@ RTEMS_INLINE_ROUTINE bool _Priority_Actions_is_empty(
 }
 
 /**
- * @brief Checks if the priority actions is valid.
- *
- * @param aggregation The aggregation of the priority action.
- *
- * @retval true The @a aggregation is valid.
- * @retval false The @a aggregation is not valid.
- */
-RTEMS_INLINE_ROUTINE bool _Priority_Actions_is_valid(
-  const Priority_Aggregation *aggregation
-)
-{
-#if defined(RTEMS_SMP)
-  return aggregation != NULL;
-#else
-  (void) aggregation;
-  return false;
-#endif
-}
-
-/**
  * @brief Moves the priority actions' actions.
  *
  * @param[in, out] actions The priority actions to move the actions away from.
@@ -389,25 +369,22 @@ RTEMS_INLINE_ROUTINE void _Priority_Set_action(
   aggregation->Action.type = type;
 }
 
+#if defined(RTEMS_SMP)
 /**
  * @brief Gets the next action of the priority aggregation.
  *
- * @param aggregation The priority aggregation to get the next action of.
+ * @param aggregation is the priority aggregation to get the next action of.
  *
- * @retval next_action The next action of @a aggregation if RTEMS_SMP is defined.
- * @retval NULL RTEMS_SMP is not defined.
+ * @return Returns the next action of the priority aggregation or NULL if there
+ *   is no next action.
  */
 RTEMS_INLINE_ROUTINE Priority_Aggregation *_Priority_Get_next_action(
   const Priority_Aggregation *aggregation
 )
 {
-#if defined(RTEMS_SMP)
   return aggregation->Action.next;
-#else
-  (void) aggregation;
-  return NULL;
-#endif
 }
+#endif
 
 /**
  * @brief Compares two priorities.
@@ -426,7 +403,7 @@ RTEMS_INLINE_ROUTINE bool _Priority_Less(
   const Priority_Control *the_left;
   const Priority_Node    *the_right;
 
-  the_left = left;
+  the_left = (const Priority_Control *) left;
   the_right = RTEMS_CONTAINER_OF( right, Priority_Node, Node.RBTree );
 
   return *the_left < the_right->priority;

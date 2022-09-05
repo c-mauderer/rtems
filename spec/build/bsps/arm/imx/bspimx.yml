@@ -13,7 +13,6 @@ install:
 - destination: ${BSP_INCLUDEDIR}
   source:
   - bsps/arm/imx/include/bsp.h
-  - bsps/arm/imx/include/tm27.h
 - destination: ${BSP_INCLUDEDIR}/arm/freescale/imx
   source:
   - bsps/arm/imx/include/arm/freescale/imx/imx_ccmvar.h
@@ -23,6 +22,7 @@ install:
   - bsps/arm/imx/include/arm/freescale/imx/imx_srcreg.h
   - bsps/arm/imx/include/arm/freescale/imx/imx_uartreg.h
   - bsps/arm/imx/include/arm/freescale/imx/imx_wdogreg.h
+  - bsps/arm/imx/include/arm/freescale/imx/imx6ul_ccmreg.h
   - bsps/arm/include/arm/freescale/imx/imx_iomuxreg.h
   - bsps/arm/include/arm/freescale/imx/imx_iomuxvar.h
 - destination: ${BSP_INCLUDEDIR}/bsp

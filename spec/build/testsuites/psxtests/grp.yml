@@ -1,7 +1,10 @@
 SPDX-License-Identifier: CC-BY-SA-4.0 OR BSD-2-Clause
 build-type: group
+cflags: []
 copyrights:
 - Copyright (C) 2020 embedded brains GmbH (http://www.embedded-brains.de)
+cppflags: []
+cxxflags: []
 enabled-by:
 - BUILD_TESTS
 - BUILD_PSXTESTS
@@ -236,6 +239,8 @@ links:
   uid: psxtimer01
 - role: build-dependency
   uid: psxtimer02
+- role: build-dependency
+  uid: psxtimer_face01
 - role: build-dependency
   uid: psxtimes01
 - role: build-dependency

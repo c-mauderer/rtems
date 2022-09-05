@@ -1,7 +1,10 @@
 SPDX-License-Identifier: CC-BY-SA-4.0 OR BSD-2-Clause
 build-type: group
+cflags: []
 copyrights:
 - Copyright (C) 2020 embedded brains GmbH (http://www.embedded-brains.de)
+cppflags: []
+cxxflags: []
 enabled-by: true
 includes: []
 install: []
@@ -52,6 +55,8 @@ links:
 - role: build-dependency
   uid: optmemflashlatency
 - role: build-dependency
+  uid: optmemflashorigin
+- role: build-dependency
   uid: optmemitcmsz
 - role: build-dependency
   uid: optmemnandsz
@@ -84,6 +89,8 @@ links:
 - role: build-dependency
   uid: optpwrsupply
 - role: build-dependency
+  uid: optbootcore
+- role: build-dependency
   uid: optusart1gpiopins
 - role: build-dependency
   uid: optusart1gpioregs
@@ -115,6 +122,12 @@ links:
   uid: linkcmds
 - role: build-dependency
   uid: linkcmdssdram
+- role: build-dependency
+  uid: linkcmdssram
+- role: build-dependency
+  uid: linkcmdssramsdram
+- role: build-dependency
+  uid: linkcmdsflashsdram
 - role: build-dependency
   uid: ../../bspopts
 type: build

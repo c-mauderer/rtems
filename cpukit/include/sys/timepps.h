@@ -24,12 +24,24 @@
 #include <sys/_ffcounter.h>
 #include <sys/ioccom.h>
 #include <sys/time.h>
+#ifdef __rtems__
+#include <rtems/score/atomic.h>
+#define	PPS_SYNC
+#define hardpps _Timecounter_Discipline
+#ifdef __cplusplus
+extern "C" {
+#endif /* __cplusplus */
+#endif /* __rtems__ */
 
 #define PPS_API_VERS_1	1
 
 typedef int pps_handle_t;	
 
+#ifndef __rtems__
 typedef unsigned pps_seq_t;
+#else /* __rtems__ */
+typedef Atomic_Uint	pps_seq_t;
+#endif /* __rtems__ */
 
 typedef struct ntp_fp {
 	unsigned int	integral;
@@ -157,6 +169,30 @@ struct pps_state {
 	int		ppscap;
 	struct timecounter *ppstc;
 	unsigned	ppscount[3];
+#ifdef __rtems__
+	/**
+	 * @brief  Wait for an event.
+	 *
+	 * Called internally when time_pps_fetch() is used.
+	 * It is initialized by pps_init() to a handler which just returns ETIMEDOUT.
+	 *
+	 * @param pps is the pointer to the object.
+	 *
+	 * @param timeout
+	 *
+	 * @retval 0 A wakeup event was received.
+	 *
+	 * @retval ETIMEDOUT A timeout occurred while waiting for the event.
+	 */
+	int (*wait)(struct pps_state *pps, struct timespec timeout);
+
+	/**
+	 * @brief Wakeup the tasks waiting for an event.
+	 *
+	 * @param pps is the pointer to the object.
+	 */
+	void (*wakeup)(struct pps_state *pps);
+#endif /* __rtems__ */
 	/*
 	 * The following fields are valid if the driver calls pps_init_abi().
 	 */
@@ -263,4 +299,9 @@ time_pps_kcbind(pps_handle_t handle, const int kernel_consumer,
 
 #endif /* KERNEL */
 
+#ifdef __rtems__
+#ifdef __cplusplus
+}
+#endif /* __cplusplus */
+#endif /* __rtems__ */
 #endif /* !_SYS_TIMEPPS_H_ */

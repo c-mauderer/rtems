@@ -57,6 +57,12 @@ extern "C" {
 
 uint32_t stm32h7_systick_frequency(void);
 
+/* default functions */
+void stm32h7_init_power(void);
+void stm32h7_init_oscillator(void);
+void stm32h7_init_clocks(void);
+void stm32h7_init_peripheral_clocks(void);
+
 /** @} */
 
 #ifdef __cplusplus
