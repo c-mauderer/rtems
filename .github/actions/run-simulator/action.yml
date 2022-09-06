@@ -31,6 +31,12 @@ runs:
         [ "${{ inputs.target }}" == "sparc/erc32" ] && \
            args="--rtems-bsp=erc32-sis" && \
            found=1
+        [ "${{ inputs.target }}" == "sparc/gr740" ] && \
+           args="--rtems-bsp=gr740-sis" && \
+           found=1
+        [ "${{ inputs.target }}" == "riscv/griscv" ] && \
+           args="--rtems-bsp=griscv-sis" && \
+           found=1
         [ "${{ inputs.target }}" == "arm/xilinx_zynq_a9_qemu" ] && \
            args="--rtems-bsp=xilinx_zynq_a9_qemu" && \
            found=1
