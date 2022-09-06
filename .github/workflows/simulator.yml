@@ -16,7 +16,7 @@ jobs:
       fail-fast: false
       matrix:
         simulators:
-          - sparc/gr740
+          - sparc/gr740-sis
           - arm/xilinx_zynq_a9_qemu
     runs-on: ubuntu-latest
     steps:
