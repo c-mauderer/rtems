@@ -103,25 +103,14 @@ runs:
           ${{ env.builddir }}
     - name: Archive log
       uses: actions/upload-artifact@v3
+      if: success() || failure()
       with:
         name: test-logs-${{ env.shortname }}
         path: logs-${{ env.shortname }}
-    - id: parse-result
-      shell: bash
-      run: |
-        # Generate github outputs from report
-        # first: Put the complete jaml into one output
-        echo "::set-output name=report::$(jq -c . ${{ env.logdir }}/report.json)"
-        # second: Count number of passed / failed tests for later steps
-        jq -r '.reports | group_by(.result) | map({result: .[0].result, count: length})[] | ("::set-output name="+.result+"::"+(.count|tostring))' ${{ env.logdir }}/report.json
-        jq -r '.reports|("::set-output name=total::"+(length|tostring))' ${{ env.logdir }}/report.json
-    - shell: bash
-      run: |
-        # check whether all tests worked as expected
-        tests_ok=$(expr \
-            ${{ steps.parse-result.outputs.passed }} + \
-            ${{ steps.parse-result.outputs.user-input }} + \
-            ${{ steps.parse-result.outputs.expected-fail }} + \
-            ${{ steps.parse-result.outputs.benchmark }})
-        expected=${{ steps.parse-result.outputs.total }}
-        [ $tests_ok -ne $expected ] && echo "only $tests_ok of $expected worked as expected." && false
+    - name: Test Report
+      uses: dorny/test-reporter@v1
+      if: success() || failure()
+      with:
+        name: test-${{ env.shortname }}
+        path: ${{ env.logdir }}/report.jtest
+        reporter: jest-junit
