@@ -94,9 +94,7 @@ runs:
           --log="${{ env.logdir }}/test.log" \
           --log-mode=all \
           --report-path="${{ env.logdir }}/report" \
-          --report-format=json \
-          --report-format=junit \
-          --report-format=yaml \
+          --report-format=json,junit,yaml \
           --warn-all \
           --rtems-tools="${{ inputs.prefix }}" \
           ${{ env.rtems_test_args }} \
@@ -117,5 +115,6 @@ runs:
       if: success() || failure()
       with:
         name: test-${{ env.shortname }}
-        path: ${{ env.logdir }}/report.jtest
+        path: ${{ env.logdir }}/report.junit
         reporter: jest-junit
+        working-directory: ${{ inputs.sources-rtems }}
