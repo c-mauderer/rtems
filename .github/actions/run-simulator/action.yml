@@ -107,6 +107,11 @@ runs:
       with:
         name: test-logs-${{ env.shortname }}
         path: logs-${{ env.shortname }}
+    - id: parse-result
+      shell: bash
+      run: |
+        # Put the complete jaml into one output
+        echo "::set-output name=report::$(jq -c . ${{ env.logdir }}/report.json)"
     - name: Test Report
       uses: dorny/test-reporter@v1
       if: success() || failure()
