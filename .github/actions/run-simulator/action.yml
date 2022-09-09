@@ -95,6 +95,8 @@ runs:
           --log-mode=all \
           --report-path="${{ env.logdir }}/report" \
           --report-format=json \
+          --report-format=junit \
+          --report-format=yaml \
           --warn-all \
           --rtems-tools="${{ inputs.prefix }}" \
           ${{ env.rtems_test_args }} \
@@ -110,15 +112,16 @@ runs:
         # Generate github outputs from report
         # first: Put the complete jaml into one output
         echo "::set-output name=report::$(jq -c . ${{ env.logdir }}/report.json)"
-        # second: Make results better accessible for later steps
-        jq -r '.["summary"]|to_entries[]|("::set-output name="+.key+"::"+(.value|tostring))' ${{ env.logdir }}/report.json
+        # second: Count number of passed / failed tests for later steps
+        jq -r '.reports | group_by(.result) | map({result: .[0].result, count: length})[] | ("::set-output name="+.result+"::"+(.count|tostring))' ${{ env.logdir }}/report.json
+        jq -r '.reports|("::set-output name=total::"+(length|tostring))' ${{ env.logdir }}/report.json
     - shell: bash
       run: |
         # check whether all tests worked as expected
         tests_ok=$(expr \
-            ${{ steps.parse-result.outputs.passed_count }} + \
-            ${{ steps.parse-result.outputs.user-input_count }} + \
-            ${{ steps.parse-result.outputs.expected-fail_count }} + \
-            ${{ steps.parse-result.outputs.benchmark_count }})
-        expected=${{ steps.parse-result.outputs.total_count }}
+            ${{ steps.parse-result.outputs.passed }} + \
+            ${{ steps.parse-result.outputs.user-input }} + \
+            ${{ steps.parse-result.outputs.expected-fail }} + \
+            ${{ steps.parse-result.outputs.benchmark }})
+        expected=${{ steps.parse-result.outputs.total }}
         [ $tests_ok -ne $expected ] && echo "only $tests_ok of $expected worked as expected." && false
