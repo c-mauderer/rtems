@@ -94,7 +94,7 @@ runs:
           --log="${{ env.logdir }}/test.log" \
           --log-mode=all \
           --report-path="${{ env.logdir }}/report" \
-          --report-format=json,junit,yaml \
+          --report-format=json \
           --warn-all \
           --rtems-tools="${{ inputs.prefix }}" \
           ${{ env.rtems_test_args }} \
@@ -110,11 +110,3 @@ runs:
       run: |
         # Put the complete jaml into one output
         echo "::set-output name=report::$(jq -c . ${{ env.logdir }}/report.json)"
-    - name: Test Report
-      uses: dorny/test-reporter@v1
-      if: success() || failure()
-      with:
-        name: test-${{ env.shortname }}
-        path: ${{ env.logdir }}/report.junit
-        reporter: jest-junit
-        working-directory: ${{ inputs.sources-rtems }}
