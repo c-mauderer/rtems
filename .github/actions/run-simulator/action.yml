@@ -108,8 +108,6 @@ runs:
     - id: parse-result
       shell: bash
       run: |
-        # Put the complete jaml into one output
-        echo "::set-output name=report::$(jq -c . ${{ env.logdir }}/report.json)"
         # Count number of passed / failed / ... tests
         # Make sure first that the ones that we use later are set to a sensible default value
         echo "::set-output name=total::-1"
@@ -128,4 +126,4 @@ runs:
             ${{ steps.parse-result.outputs.expected-fail }} + \
             ${{ steps.parse-result.outputs.benchmark }})
         expected=${{ steps.parse-result.outputs.total }}
-        [ $tests_ok -ne $expected ] && echo "only $tests_ok of $expected worked as expected." && false
+        [ $tests_ok -ne $expected ] && echo "only $tests_ok of $expected worked as expected. Please check test-logs-* artefacts." && false

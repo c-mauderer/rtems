@@ -67,9 +67,3 @@ jobs:
           target: ${{ matrix.simulators }}
           sources-rtems: "$GITHUB_WORKSPACE/rtems"
           prefix: "$GITHUB_WORKSPACE/toolchain/opt/rtems/6"
-      - name: Show report on failure
-        if: ${{ failure() }}
-        run: |
-          jq -S '.summary' <<EOF170635471293847
-          ${{ steps.simulator.outputs.report }}
-          EOF170635471293847
