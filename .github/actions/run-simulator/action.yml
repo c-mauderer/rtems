@@ -126,4 +126,5 @@ runs:
             ${{ steps.parse-result.outputs.expected-fail }} + \
             ${{ steps.parse-result.outputs.benchmark }})
         expected=${{ steps.parse-result.outputs.total }}
-        [ $tests_ok -ne $expected ] && echo "only $tests_ok of $expected worked as expected. Please check test-logs-* artefacts." && false
+        echo "$tests_ok of $expected worked as expected."
+        [ $tests_ok -eq $expected ]
