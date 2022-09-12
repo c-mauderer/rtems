@@ -110,3 +110,22 @@ runs:
       run: |
         # Put the complete jaml into one output
         echo "::set-output name=report::$(jq -c . ${{ env.logdir }}/report.json)"
+        # Count number of passed / failed / ... tests
+        # Make sure first that the ones that we use later are set to a sensible default value
+        echo "::set-output name=total::-1"
+        echo "::set-output name=passed::0"
+        echo "::set-output name=user-input::0"
+        echo "::set-output name=expected-fail::0"
+        echo "::set-output name=benchmark::0"
+        jq -r '.reports | group_by(.result) | map({result: .[0].result, count: length})[] | ("::set-output name="+.result+"::"+(.count|tostring))' ${{ env.logdir }}/report.json
+        jq -r '.reports|("::set-output name=total::"+(length|tostring))' ${{ env.logdir }}/report.json
+    - shell: bash
+      run: |
+        # check whether all tests worked as expected
+        tests_ok=$(expr \
+            ${{ steps.parse-result.outputs.passed }} + \
+            ${{ steps.parse-result.outputs.user-input }} + \
+            ${{ steps.parse-result.outputs.expected-fail }} + \
+            ${{ steps.parse-result.outputs.benchmark }})
+        expected=${{ steps.parse-result.outputs.total }}
+        [ $tests_ok -ne $expected ] && echo "only $tests_ok of $expected worked as expected." && false
