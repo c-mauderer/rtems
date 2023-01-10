@@ -1,0 +1,26 @@
+name: 'Mark all PRs as stale'
+on:
+  pull_request:
+    types: [opened]
+  schedule:
+    - cron: '28 6 * * *'
+
+jobs:
+  stale:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/stale@v7
+        with:
+          stale-issue-message: |
+            Please note that issues are not processed in this repository
+            and will automatically be closed after a few days. Please send a
+            mail to the devel mailing list at https://lists.rtems.org or create
+            a ticket at https://devel.rtems.org.
+          stale-pr-message: |
+            Please note that Pull Requests are not processed in this repository
+            and will automatically be closed after a few days. You may use Pull
+            Requests for testing changes. As soon as you are happy with the
+            result, you should send the patch set to the devel mailing list at
+            https://lists.rtems.org. Thank you.
+          days-before-stale: 0
+          days-before-close: 7
